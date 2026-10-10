@@ -99,6 +99,13 @@ create table if not exists public.comparisons (
   created_at timestamptz not null default now()
 );
 
+create table if not exists public.comparison_views (
+  comparison_id uuid not null references public.comparisons (id) on delete cascade,
+  user_id uuid not null references public.profiles (id) on delete cascade,
+  viewed_at timestamptz not null default now(),
+  primary key (comparison_id, user_id)
+);
+
 create table if not exists public.conversation_prompts (
   id uuid primary key default gen_random_uuid(),
   comparison_id uuid not null references public.comparisons (id) on delete cascade,
@@ -249,6 +256,7 @@ alter table public.answers enable row level security;
 alter table public.relationship_profiles enable row level security;
 alter table public.partner_invitations enable row level security;
 alter table public.comparisons enable row level security;
+alter table public.comparison_views enable row level security;
 alter table public.conversation_prompts enable row level security;
 alter table public.conversation_statuses enable row level security;
 alter table public.post_reflections enable row level security;
@@ -281,6 +289,17 @@ drop policy if exists "own assessments" on public.assessments;
 create policy "own assessments" on public.assessments for all using (user_id = auth.uid()) with check (user_id = auth.uid());
 drop policy if exists "own answers" on public.answers;
 create policy "own answers" on public.answers for all using (user_id = auth.uid()) with check (user_id = auth.uid());
+drop policy if exists "partner answers when ready" on public.answers;
+create policy "partner answers when ready" on public.answers for select using (
+  exists (
+    select 1 from public.partner_invitations i
+    where i.status = 'ready'
+      and (
+        (i.inviter_id = auth.uid() and i.invitee_id = answers.user_id)
+        or (i.invitee_id = auth.uid() and i.inviter_id = answers.user_id)
+      )
+  )
+);
 drop policy if exists "own relationship profile" on public.relationship_profiles;
 create policy "own relationship profile" on public.relationship_profiles for all using (user_id = auth.uid()) with check (user_id = auth.uid());
 drop policy if exists "inviter manages invitation" on public.partner_invitations;
@@ -293,6 +312,16 @@ drop policy if exists "comparison participants" on public.comparisons;
 create policy "comparison participants" on public.comparisons for select using (user_a_id = auth.uid() or user_b_id = auth.uid());
 drop policy if exists "comparison insert participants" on public.comparisons;
 create policy "comparison insert participants" on public.comparisons for insert with check (user_a_id = auth.uid() or user_b_id = auth.uid());
+drop policy if exists "comparison views participants insert" on public.comparison_views;
+create policy "comparison views participants insert" on public.comparison_views for insert with check (
+  user_id = auth.uid()
+  and exists (
+    select 1 from public.comparisons c
+    where c.id = comparison_id and (c.user_a_id = auth.uid() or c.user_b_id = auth.uid())
+  )
+);
+drop policy if exists "comparison views own read" on public.comparison_views;
+create policy "comparison views own read" on public.comparison_views for select using (user_id = auth.uid());
 drop policy if exists "prompts via comparison" on public.conversation_prompts;
 create policy "prompts via comparison" on public.conversation_prompts for select using (
   exists (select 1 from public.comparisons c where c.id = conversation_prompts.comparison_id and (c.user_a_id = auth.uid() or c.user_b_id = auth.uid()))

@@ -36,6 +36,20 @@ export default async function ReflectionPage() {
         <h2 className="font-serif text-2xl">Your relationship orientation</h2>
         <p className="mt-4 leading-relaxed text-ink-soft">{report.orientation}</p>
       </section>
+      {report.dimensionSummaries && report.dimensionSummaries.length > 0 ? (
+        <section>
+          <h2 className="font-serif text-2xl">By area of life</h2>
+          <p className="mt-2 text-sm text-ink-soft">Summaries from your answers, grouped by questionnaire section.</p>
+          <div className="mt-5 space-y-6">
+            {report.dimensionSummaries.map((dim) => (
+              <div key={dim.dimension}>
+                <h3 className="text-sm uppercase tracking-wider text-sage">{dim.sectionTitle}</h3>
+                <p className="mt-2 leading-relaxed text-ink-soft">{dim.summary}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+      ) : null}
       <section>
         <h2 className="font-serif text-2xl">What matters most to you</h2>
         <div className="mt-4 grid gap-4 sm:grid-cols-2">

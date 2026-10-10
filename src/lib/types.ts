@@ -79,6 +79,12 @@ export interface NonNegotiableItem {
   note?: string;
 }
 
+export interface DimensionSummary {
+  dimension: Dimension;
+  sectionTitle: string;
+  summary: string;
+}
+
 export interface SelfReport {
   orientation: string;
   themes: ThemeCard[];
@@ -87,6 +93,8 @@ export interface SelfReport {
   reflections: string[];
   nonNegotiables: NonNegotiableItem[];
   selfQuestions: string[];
+  dimensionSummaries?: DimensionSummary[];
+  generatedBy?: "rules" | "hybrid" | "slm";
 }
 
 export interface ComparisonInsight {
@@ -99,6 +107,11 @@ export interface ComparisonContent {
   alignments: ComparisonInsight[];
   differences: ComparisonInsight[];
   explore: ComparisonInsight[];
+  narrative?: {
+    alignmentsOverview?: string;
+    differencesOverview?: string;
+  };
+  slmEnhanced?: boolean;
 }
 
 export type ConversationStatus = "discussed" | "need_to_discuss" | "not_relevant";

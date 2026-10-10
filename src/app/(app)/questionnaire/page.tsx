@@ -5,6 +5,8 @@ import { redirect } from "next/navigation";
 import type { AnswerValue } from "@/lib/types";
 import { ensureAssessment } from "@/app/actions/core";
 
+export const maxDuration = 300;
+
 export default async function QuestionnairePage() {
   const supabase = await createServerSupabase();
   const {

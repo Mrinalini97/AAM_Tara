@@ -2,6 +2,7 @@ import type { SelfReport, StoredAnswer } from "@/lib/types";
 import { countTags, has } from "@/lib/engine/tags-from-answers";
 import { TAGS as T } from "@/lib/engine/tags";
 import { QUESTION_BY_ID } from "@/lib/questions/data";
+import { formatAnswerValue } from "@/lib/questions/format-answer";
 import { IMPORTANCE_LABELS, type ImportanceLevel } from "@/lib/types";
 
 interface Rule {
@@ -28,6 +29,187 @@ function pick(counts: Record<string, number>, rules: Rule[], limit: number) {
     if (out.length >= limit) break;
   }
   return out;
+}
+
+function answerText(answers: StoredAnswer[], questionId: string) {
+  const found = answers.find((item) => item.questionId === questionId);
+  if (!found) return null;
+  const text = formatAnswerValue(questionId, found.value);
+  return !text || text === "—" ? null : text;
+}
+
+function rankPosition(answers: StoredAnswer[], questionId: string, optionId: string) {
+  const found = answers.find((item) => item.questionId === questionId);
+  if (!found || found.value.kind !== "ranking") return null;
+  const index = found.value.orderedIds.indexOf(optionId);
+  return index < 0 ? null : index + 1;
+}
+
+function importanceLabel(answers: StoredAnswer[], itemId: string) {
+  const found = answers.find((item) => item.questionId === "importance_map");
+  if (!found || found.value.kind !== "importance") return null;
+  const level = found.value.ratings[itemId];
+  return level ? IMPORTANCE_LABELS[level] : null;
+}
+
+function joinSentences(parts: string[]) {
+  return parts.filter(Boolean).join(" ");
+}
+
+function describeTheme(id: string, fallback: string, answers: StoredAnswer[]) {
+  const builders: Record<string, () => string[]> = {
+    intellectual: () => {
+      const parts: string[] = [];
+      const ideasRank = rankPosition(answers, "values_rank", "ideas");
+      if (ideasRank) {
+        parts.push(
+          ideasRank === 1
+            ? "You ranked ideas, curiosity, and mental engagement first among the things that should shape a shared life."
+            : `You ranked ideas, curiosity, and mental engagement ${ideasRank} among the things that should shape a shared life.`,
+        );
+      }
+      const evening = answerText(answers, "intellectual_evening");
+      if (evening) parts.push(`On a typical evening, what you actually want is: ${evening}`);
+      const need = answerText(answers, "intellectual_need");
+      if (need) parts.push(`Asked how important it is that a partner is someone you can think with, you said: ${need}`);
+      const clash = answerText(answers, "intellectual_disagreement");
+      if (clash) parts.push(`When you disagree about ideas: ${clash}`);
+      const weight = importanceLabel(answers, "intellectual");
+      if (weight) parts.push(`You marked intellectual companionship as ${weight.toLowerCase()}.`);
+      return parts;
+    },
+    emotional_safety: () => {
+      const parts: string[] = [];
+      const closeRank = rankPosition(answers, "values_rank", "connection");
+      if (closeRank) {
+        parts.push(
+          closeRank === 1
+            ? "Emotional closeness came first in your ranking of what should shape a shared life."
+            : `Emotional closeness sat at number ${closeRank} in your ranking of what should shape a shared life.`,
+        );
+      }
+      const picture = answerText(answers, "good_life");
+      if (picture) parts.push(`The picture of a good life you chose was: ${picture}`);
+      const space = answerText(answers, "closeness_space");
+      if (space) parts.push(`On closeness versus breathing room: ${space}`);
+      const hard = answerText(answers, "hard_times");
+      if (hard) parts.push(`In a difficult season, what you most need is: ${hard}`);
+      return parts;
+    },
+    career_growth: () => {
+      const parts: string[] = [];
+      const workRank = rankPosition(answers, "values_rank", "achievement");
+      const growthRank = rankPosition(answers, "values_rank", "growth");
+      if (workRank) parts.push(`Achievement and ambition ranked ${workRank} in what should shape a shared life.`);
+      if (growthRank) parts.push(`Growth and learning ranked ${growthRank}.`);
+      const relocate = answerText(answers, "relocation_career");
+      if (relocate) parts.push(`If one of you had a career opportunity that required a move: ${relocate}`);
+      const dual = answerText(answers, "dual_career");
+      if (dual) parts.push(`On two careers in one household: ${dual}`);
+      const hours = answerText(answers, "work_hours");
+      if (hours) parts.push(`On long or intense work seasons: ${hours}`);
+      const protect = answerText(answers, "protect_year");
+      if (protect) parts.push(`If the next year could protect only a few things, you included: ${protect}`);
+      const weight = importanceLabel(answers, "career");
+      if (weight) parts.push(`You marked career as ${weight.toLowerCase()}.`);
+      return parts;
+    },
+    independence: () => {
+      const parts: string[] = [];
+      const indepRank = rankPosition(answers, "values_rank", "independence");
+      const freeRank = rankPosition(answers, "values_rank", "freedom");
+      if (indepRank) parts.push(`Personal independence ranked ${indepRank} in what should shape a shared life.`);
+      if (freeRank) parts.push(`Freedom and flexibility ranked ${freeRank}.`);
+      const space = answerText(answers, "closeness_space");
+      if (space) parts.push(`On how much togetherness you can live with: ${space}`);
+      const decide = answerText(answers, "decisions");
+      if (decide) parts.push(`On major decisions: ${decide}`);
+      const unit = answerText(answers, "couple_unit");
+      if (unit) parts.push(`On the couple versus the wider family: ${unit}`);
+      const weight = importanceLabel(answers, "independence");
+      if (weight) parts.push(`You marked independence as ${weight.toLowerCase()}.`);
+      return parts;
+    },
+    family: () => {
+      const parts: string[] = [];
+      const familyRank = rankPosition(answers, "values_rank", "family");
+      if (familyRank) {
+        parts.push(
+          familyRank === 1
+            ? "Close family relationships came first in your ranking of what should shape a shared life."
+            : `Close family relationships ranked ${familyRank} in what should shape a shared life.`,
+        );
+      }
+      const weekend = answerText(answers, "weekend_family");
+      if (weekend) parts.push(`On weekends with relatives: ${weekend}`);
+      const live = answerText(answers, "where_live");
+      if (live) parts.push(`On where you would live: ${live}`);
+      const parents = answerText(answers, "parents_role");
+      if (parents) parts.push(`On the role of parents after marriage: ${parents}`);
+      const inlaws = answerText(answers, "inlaws");
+      if (inlaws) parts.push(`On in-laws: ${inlaws}`);
+      const weight = importanceLabel(answers, "family_role");
+      if (weight) parts.push(`You marked family involvement as ${weight.toLowerCase()}.`);
+      return parts;
+    },
+    stability: () => {
+      const parts: string[] = [];
+      const stabRank = rankPosition(answers, "values_rank", "stability");
+      if (stabRank) parts.push(`Stability and security ranked ${stabRank} in what should shape a shared life.`);
+      const picture = answerText(answers, "good_life");
+      if (picture) parts.push(`Your picture of a good life: ${picture}`);
+      const money = answerText(answers, "saving_spending");
+      if (money) parts.push(`On saving and spending: ${money}`);
+      const joint = answerText(answers, "joint_money");
+      if (joint) parts.push(`On how money should be held: ${joint}`);
+      const risk = answerText(answers, "risk");
+      if (risk) parts.push(`On financial risk: ${risk}`);
+      const weight = importanceLabel(answers, "money");
+      if (weight) parts.push(`You marked money as ${weight.toLowerCase()}.`);
+      return parts;
+    },
+    balance: () => {
+      const parts: string[] = [];
+      const protect = answerText(answers, "protect_year");
+      if (protect) parts.push(`If the next year could protect only a few things, you chose: ${protect}`);
+      const hours = answerText(answers, "work_hours");
+      if (hours) parts.push(`On work hours: ${hours}`);
+      const social = answerText(answers, "social_travel");
+      if (social) parts.push(`On social life and travel: ${social}`);
+      const shared = answerText(answers, "shared_time");
+      if (shared) parts.push(`The time together you would protect: ${shared}`);
+      return parts;
+    },
+    children: () => {
+      const parts: string[] = [];
+      const desire = answerText(answers, "children_desire");
+      if (desire) parts.push(`On whether you want children: ${desire}`);
+      const philosophy = answerText(answers, "parenting_philosophy");
+      if (philosophy) parts.push(`On parenting: ${philosophy}`);
+      const care = answerText(answers, "childcare_split");
+      if (care) parts.push(`On care: ${care}`);
+      const education = answerText(answers, "education");
+      if (education) parts.push(`On a child's education: ${education}`);
+      const weight = importanceLabel(answers, "children");
+      if (weight) parts.push(`You marked children as ${weight.toLowerCase()}.`);
+      return parts;
+    },
+    open_talk: () => {
+      const parts: string[] = [];
+      const disagreement = answerText(answers, "disagreement");
+      if (disagreement) parts.push(`When you disagree: ${disagreement}`);
+      const expression = answerText(answers, "expression");
+      if (expression) parts.push(`On saying what you feel: ${expression}`);
+      const repair = answerText(answers, "repair");
+      if (repair) parts.push(`On repair after a fight: ${repair}`);
+      const decide = answerText(answers, "conflict_decision");
+      if (decide) parts.push(`If you are stuck: ${decide}`);
+      return parts;
+    },
+  };
+
+  const parts = builders[id]?.() ?? [];
+  return parts.length >= 2 ? joinSentences(parts) : fallback;
 }
 
 const ORIENTATION_RULES: Rule[] = [
@@ -261,7 +443,11 @@ export function generateSelfReport(answers: StoredAnswer[]): SelfReport {
     return true;
   })
     .slice(0, 6)
-    .map(({ id, title, description }) => ({ id, title, description }));
+    .map(({ id, title, description }) => ({
+      id,
+      title,
+      description: describeTheme(id, description, answers),
+    }));
 
   if (themes.length === 0) {
     themes.push({

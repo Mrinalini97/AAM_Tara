@@ -62,16 +62,28 @@ export default async function PartnerPage() {
         </p>
       ) : null}
 
-      {invitation?.status === "ready" ? (
-        <div className="mt-8 flex flex-wrap gap-3">
-          <Link href="/understand-us" className="rounded-full bg-sage px-5 py-2.5 text-paper">
-            Understand us
-          </Link>
-          <Link href="/conversations" className="rounded-full border border-line px-5 py-2.5">
-            Conversation guide
-          </Link>
-        </div>
-      ) : null}
+      <div className="mt-8 flex flex-wrap items-center gap-3">
+        {invitation?.status === "ready" ? (
+          <>
+            <Link href="/understand-us" className="rounded-full bg-sage px-5 py-2.5 text-paper">
+              Understand us
+            </Link>
+            <Link href="/partner/responses" className="rounded-full border border-line px-5 py-2.5">
+              Partner&apos;s answers
+            </Link>
+            <Link href="/conversations" className="rounded-full border border-line px-5 py-2.5">
+              Conversation guide
+            </Link>
+          </>
+        ) : (
+          <p className="text-sm text-ink-soft">
+            <span className="mr-3 inline-flex cursor-not-allowed rounded-full border border-line px-5 py-2.5 opacity-50">
+              Partner&apos;s answers
+            </span>
+            Available once your partner completes their reflection.
+          </p>
+        )}
+      </div>
 
       {invitation && !isInviter ? (
         <p className="mt-6 text-sm text-ink-soft">You joined through an invitation. Shared insights appear when both of you have finished.</p>

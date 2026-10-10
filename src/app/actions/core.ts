@@ -3,10 +3,10 @@
 import { randomBytes } from "crypto";
 import { revalidatePath } from "next/cache";
 import { QUESTIONS } from "@/lib/questions/data";
-import { extractTags, isAnswerComplete, countTags } from "@/lib/engine/tags-from-answers";
-import { generateSelfReport } from "@/lib/engine/self-report";
+import { extractTags, isAnswerComplete } from "@/lib/engine/tags-from-answers";
 import { generateComparison, generateConversationPrompts } from "@/lib/engine/comparison";
 import { createServerSupabase } from "@/lib/supabase/server";
+import { buildRelationshipReport } from "@/lib/admin/regenerate-reports";
 import type { AnswerValue, StoredAnswer } from "@/lib/types";
 
 async function requireUser() {
@@ -56,8 +56,7 @@ export async function completeAssessment() {
     return !isAnswerComplete(q.id, found?.value);
   });
   if (missing.length) throw new Error("Please complete the remaining questions before finishing.");
-  const report = generateSelfReport(answers);
-  const weights = countTags(answers);
+  const { report, weights } = await buildRelationshipReport(answers);
   const { error: profileError } = await supabase.from("relationship_profiles").upsert(
     { user_id: user.id, assessment_id: assessment.id, tags: Object.keys(weights), tag_weights: weights, report },
     { onConflict: "user_id" },
@@ -70,6 +69,7 @@ export async function completeAssessment() {
   await maybeBuildComparison(supabase, user.id);
   revalidatePath("/reflection");
   revalidatePath("/home");
+  revalidatePath("/understand-us");
   return { ok: true };
 }
 
@@ -113,7 +113,7 @@ async function maybeBuildComparison(
 ) {
   const { data: invitations } = await supabase
     .from("partner_invitations")
-    .select("id")
+    .select("id, inviter_id, invitee_id")
     .or(`inviter_id.eq.${userId},invitee_id.eq.${userId}`);
 
   for (const invitation of invitations ?? []) {
@@ -123,6 +123,7 @@ async function maybeBuildComparison(
     if (!pair.ready || !pair.a || !pair.b) continue;
     const { data: existing } = await supabase.from("comparisons").select("id").eq("invitation_id", invitation.id).maybeSingle();
     if (existing) continue;
+
     const content = generateComparison(pair.a, pair.b);
     const prompts = generateConversationPrompts(pair.a, pair.b);
     const { data: comparison, error: cmpError } = await supabase
@@ -141,6 +142,9 @@ async function maybeBuildComparison(
       })),
     );
     await supabase.rpc("mark_invitation_ready", { p_invitation_id: invitation.id });
+    revalidatePath("/understand-us");
+    revalidatePath("/partner");
+    revalidatePath("/partner/responses");
   }
 }
 

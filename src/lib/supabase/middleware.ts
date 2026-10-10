@@ -32,7 +32,8 @@ export async function updateSession(request: NextRequest) {
     path.startsWith("/signup") ||
     path.startsWith("/auth") ||
     path.startsWith("/invite") ||
-    path.startsWith("/preview");
+    path.startsWith("/preview") ||
+    path.startsWith("/admin");
 
   if (!user && !isPublic) {
     const redirect = request.nextUrl.clone();
