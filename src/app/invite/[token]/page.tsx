@@ -34,7 +34,7 @@ export default async function InvitePage({
         <h1 className="mt-10 font-serif text-3xl">This invitation is not available</h1>
         <p className="mt-3 text-ink-soft">The link may be incorrect, or it may have been withdrawn.</p>
         <Link href="/" className="mt-8 inline-block text-sage">
-          Go to Tara
+          Go to Bimbam
         </Link>
       </div>
     );

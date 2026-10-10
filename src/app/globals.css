@@ -1,15 +1,18 @@
 @import "tailwindcss";
 
 :root {
-  --paper: #f6f1e8;
-  --paper-deep: #ece4d6;
-  --ink: #2a241c;
-  --ink-soft: #5c5348;
+  --paper: #f4efe6;
+  --paper-deep: #e7dcc8;
+  --ink: #110f0d;
+  --ink-soft: #6a6158;
   --sage: #4d5d4c;
   --sage-deep: #3a4739;
   --clay: #9a5b4a;
-  --line: rgba(42, 36, 28, 0.12);
-  --shadow: 0 18px 50px rgba(42, 36, 28, 0.08);
+  --flare: #e9644c;
+  --flare-deep: #db715e;
+  --gold: #e8b86d;
+  --line: rgba(17, 15, 13, 0.12);
+  --shadow: 0 18px 50px rgba(17, 15, 13, 0.08);
 }
 
 @theme inline {
@@ -20,6 +23,9 @@
   --color-sage: var(--sage);
   --color-sage-deep: var(--sage-deep);
   --color-clay: var(--clay);
+  --color-flare: var(--flare);
+  --color-flare-deep: var(--flare-deep);
+  --color-gold: var(--gold);
   --color-line: var(--line);
   --font-sans: var(--font-sans);
   --font-serif: var(--font-serif);
@@ -37,4 +43,42 @@ body {
 
 .font-serif {
   font-family: var(--font-serif), ui-serif, Georgia, serif;
+}
+
+@keyframes marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse-line {
+  0%,
+  100% {
+    width: 4.5rem;
+  }
+  50% {
+    width: 9rem;
+  }
+}
+
+.animate-marquee {
+  animation: marquee 22s linear infinite;
+}
+
+.animate-rise {
+  animation: rise 0.7s ease-out both;
 }

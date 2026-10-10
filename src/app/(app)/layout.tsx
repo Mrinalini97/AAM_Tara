@@ -12,7 +12,7 @@ export default async function AppGroupLayout({ children }: { children: React.Rea
   return (
     <div className="min-h-screen">
       <AppNav />
-      <div className="mx-auto max-w-3xl px-4 py-10">{children}</div>
+      <div className="mx-auto max-w-5xl px-4 py-10">{children}</div>
     </div>
   );
 }
