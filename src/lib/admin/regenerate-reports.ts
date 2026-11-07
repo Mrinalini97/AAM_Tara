@@ -1,13 +1,15 @@
 import { generateSelfReport } from "@/lib/engine/self-report";
 import { countTags } from "@/lib/engine/tags-from-answers";
+import { answersInScope } from "@/lib/questions/visibility";
 import { enrichSelfReportWithSlm } from "@/lib/slm/self-report";
 import { createServiceSupabase } from "@/lib/supabase/service";
 import type { AnswerValue, StoredAnswer } from "@/lib/types";
 
 export async function buildRelationshipReport(answers: StoredAnswer[]) {
-  const base = generateSelfReport(answers);
-  const report = await enrichSelfReportWithSlm(base, answers);
-  const weights = countTags(answers);
+  const scoped = answersInScope(answers);
+  const base = generateSelfReport(scoped);
+  const report = await enrichSelfReportWithSlm(base, scoped);
+  const weights = countTags(scoped);
   return { report, weights };
 }
 

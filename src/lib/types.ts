@@ -7,6 +7,7 @@ export type Dimension =
   | "career_lifestyle"
   | "children_parenting"
   | "communication_conflict"
+  | "personal_history"
   | "non_negotiables";
 
 export type QuestionType =
@@ -35,10 +36,17 @@ export interface ImportanceItem {
   tags: Record<ImportanceLevel, string[]>;
 }
 
+export interface QuestionVisibility {
+  questionId: string;
+  optionIds: string[];
+}
+
 export interface Question {
   id: string;
   dimension: Dimension;
   sectionTitle: string;
+  /** Precise thing this question explores. Internal only; not shown while answering. */
+  explored: string;
   question: string;
   helper?: string;
   type: QuestionType;
@@ -48,6 +56,7 @@ export interface Question {
   minSelect?: number;
   rankCount?: number;
   required?: boolean;
+  visibleWhen?: QuestionVisibility;
 }
 
 export type AnswerValue =

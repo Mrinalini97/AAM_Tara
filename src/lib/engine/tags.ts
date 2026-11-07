@@ -75,4 +75,8 @@ export const TAGS = {
   flexibility_high: "flexibility_high",
   flexibility_low: "flexibility_low",
   uncertainty_present: "uncertainty_present",
+  substances_absent: "substances_absent",
+  history_none: "history_none",
+  history_serious: "history_serious",
+  history_casual: "history_casual",
 } as const;

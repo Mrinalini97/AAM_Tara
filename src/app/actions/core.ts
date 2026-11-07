@@ -2,8 +2,8 @@
 
 import { randomBytes } from "crypto";
 import { revalidatePath } from "next/cache";
-import { QUESTIONS } from "@/lib/questions/data";
 import { extractTags, isAnswerComplete } from "@/lib/engine/tags-from-answers";
+import { answersInScope, visibleQuestions } from "@/lib/questions/visibility";
 import { generateComparison, generateConversationPrompts } from "@/lib/engine/comparison";
 import { createServerSupabase } from "@/lib/supabase/server";
 import { buildRelationshipReport } from "@/lib/admin/regenerate-reports";
@@ -51,12 +51,15 @@ export async function completeAssessment() {
     value: row.value as AnswerValue,
     tags: row.tags ?? [],
   }));
-  const missing = QUESTIONS.filter((q) => q.required).filter((q) => {
-    const found = answers.find((a) => a.questionId === q.id);
-    return !isAnswerComplete(q.id, found?.value);
-  });
+  const scoped = answersInScope(answers);
+  const missing = visibleQuestions(answers)
+    .filter((q) => q.required)
+    .filter((q) => {
+      const found = scoped.find((a) => a.questionId === q.id);
+      return !isAnswerComplete(q.id, found?.value);
+    });
   if (missing.length) throw new Error("Please complete the remaining questions before finishing.");
-  const { report, weights } = await buildRelationshipReport(answers);
+  const { report, weights } = await buildRelationshipReport(scoped);
   const { error: profileError } = await supabase.from("relationship_profiles").upsert(
     { user_id: user.id, assessment_id: assessment.id, tags: Object.keys(weights), tag_weights: weights, report },
     { onConflict: "user_id" },
@@ -64,7 +67,7 @@ export async function completeAssessment() {
   if (profileError) throw new Error(profileError.message);
   await supabase
     .from("assessments")
-    .update({ status: "completed", completed_at: new Date().toISOString(), current_index: QUESTIONS.length })
+    .update({ status: "completed", completed_at: new Date().toISOString(), current_index: visibleQuestions(answers).length })
     .eq("id", assessment.id);
   await maybeBuildComparison(supabase, user.id);
   revalidatePath("/reflection");

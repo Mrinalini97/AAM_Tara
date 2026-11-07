@@ -1,14 +1,21 @@
 "use client";
 
 import { createBrowserSupabase } from "@/lib/supabase/client";
-import { authCallbackUrl, mapAuthError, validateDisplayName, validateEmail, validatePassword } from "@/lib/auth/validation";
+import { authCallbackUrl, mapAuthError, safeNextPath, validateDisplayName, validateEmail, validatePassword } from "@/lib/auth/validation";
 import { useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/Button";
 import { useRouter } from "next/navigation";
 
+const AUTH_NEXT_COOKIE = "tara_auth_next";
+
+function rememberNext(path: string) {
+  document.cookie = `${AUTH_NEXT_COOKIE}=${encodeURIComponent(path)}; Path=/; Max-Age=3600; SameSite=Lax`;
+}
+
 export function AuthForm({ mode, nextPath = "/home" }: { mode: "login" | "signup"; nextPath?: string }) {
   const router = useRouter();
+  const destination = safeNextPath(nextPath, mode === "signup" ? "/discover" : "/home");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
@@ -42,12 +49,13 @@ export function AuthForm({ mode, nextPath = "/home" }: { mode: "login" | "signup
     try {
       const supabase = createBrowserSupabase();
       if (mode === "signup") {
+        rememberNext(destination);
         const { data, error: signError } = await supabase.auth.signUp({
           email: email.trim(),
           password,
           options: {
             data: { display_name: name.trim() },
-            emailRedirectTo: authCallbackUrl(),
+            emailRedirectTo: authCallbackUrl(destination),
           },
         });
         if (signError) throw signError;
@@ -66,7 +74,7 @@ export function AuthForm({ mode, nextPath = "/home" }: { mode: "login" | "signup
         });
         if (signError) throw signError;
       }
-      router.push(nextPath);
+      router.push(destination);
       router.refresh();
     } catch (err) {
       const message = err instanceof Error ? err.message : "Something went wrong.";
@@ -82,10 +90,10 @@ export function AuthForm({ mode, nextPath = "/home" }: { mode: "login" | "signup
         <h2 className="font-serif text-2xl">Check your inbox</h2>
         <p className="text-sm text-paper/65">
           We sent a confirmation link to <span className="text-paper">{email.trim()}</span>. Open it to finish
-          creating your account, then sign in. Until then, you are not logged in.
+          signing in. You will return to the page you were opening. Until you open it, you are not logged in.
         </p>
         <p className="text-sm text-paper/65">If you do not see it, check spam or promotions.</p>
-        <Link href="/login" className="inline-block text-sm text-flare underline">
+        <Link href={`/login?next=${encodeURIComponent(destination)}`} className="inline-block text-sm text-flare underline">
           Go to sign in
         </Link>
       </div>
@@ -141,14 +149,14 @@ export function AuthForm({ mode, nextPath = "/home" }: { mode: "login" | "signup
         {mode === "signup" ? (
           <>
             Already have an account?{" "}
-            <Link href="/login" className="text-flare underline">
+            <Link href={`/login?next=${encodeURIComponent(destination)}`} className="text-flare underline">
               Sign in
             </Link>
           </>
         ) : (
           <>
             New here?{" "}
-            <Link href="/signup" className="text-flare underline">
+            <Link href={`/signup?next=${encodeURIComponent(destination)}`} className="text-flare underline">
               Create an account
             </Link>
           </>

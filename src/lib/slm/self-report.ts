@@ -1,5 +1,6 @@
 import { QUESTIONS } from "@/lib/questions/data";
 import { formatAnswerValue } from "@/lib/questions/format-answer";
+import { isQuestionVisible } from "@/lib/questions/visibility";
 import { completeQualitativeReport } from "@/lib/llm";
 import type { Dimension, DimensionSummary, SelfReport, StoredAnswer, ThemeCard } from "@/lib/types";
 
@@ -15,7 +16,9 @@ Rules:
 Return valid JSON only, no markdown fences.`;
 
 function answersForDimension(dimension: Dimension, answers: StoredAnswer[]) {
-  const ids = new Set(QUESTIONS.filter((q) => q.dimension === dimension).map((q) => q.id));
+  const ids = new Set(
+    QUESTIONS.filter((q) => q.dimension === dimension && isQuestionVisible(q, answers)).map((q) => q.id),
+  );
   return answers.filter((a) => ids.has(a.questionId));
 }
 
@@ -30,7 +33,8 @@ function formatAllAnswers(answers: StoredAnswer[]) {
   return answers
     .map((a) => {
       const q = QUESTIONS.find((x) => x.id === a.questionId);
-      return `Q: ${q?.question ?? a.questionId}\nA: ${formatAnswerValue(a.questionId, a.value)}`;
+      const dimension = q?.explored ? `Dimension: ${q.explored}\n` : "";
+      return `${dimension}Q: ${q?.question ?? a.questionId}\nA: ${formatAnswerValue(a.questionId, a.value)}`;
     })
     .join("\n");
 }

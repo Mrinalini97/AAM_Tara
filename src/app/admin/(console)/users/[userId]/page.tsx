@@ -93,7 +93,8 @@ export default async function AdminUserPage({ params }: { params: Promise<{ user
           <div className="mt-4 space-y-4">
             {section.items.map((item) => (
               <Card key={item.questionId}>
-                <p className="text-sm leading-relaxed text-ink">{item.question}</p>
+                <p className="text-xs uppercase tracking-[0.16em] text-sage">{item.explored}</p>
+                <p className="mt-2 text-sm leading-relaxed text-ink">{item.question}</p>
                 <p className="mt-3 leading-relaxed text-ink-soft">{item.answer}</p>
               </Card>
             ))}

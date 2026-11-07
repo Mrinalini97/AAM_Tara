@@ -1,6 +1,7 @@
 import { createServerSupabase } from "@/lib/supabase/server";
 import { formatAnswerValue } from "@/lib/questions/format-answer";
 import { QUESTIONS } from "@/lib/questions/data";
+import { isQuestionVisible } from "@/lib/questions/visibility";
 import { Card } from "@/components/ui/Card";
 import Link from "next/link";
 import { redirect } from "next/navigation";
@@ -68,6 +69,7 @@ export default async function PartnerResponsesPage() {
   const sections = new Map<string, { title: string; items: { question: string; answer: string }[] }>();
 
   for (const q of QUESTIONS) {
+    if (!isQuestionVisible(q, byQuestion)) continue;
     const value = byQuestion.get(q.id);
     if (!value) continue;
     const key = q.dimension;

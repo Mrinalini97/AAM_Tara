@@ -2,9 +2,9 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { QUESTIONS } from "@/lib/questions/data";
 import { QuestionCard } from "@/components/questionnaire/QuestionCard";
 import { completeAssessment, saveAnswer } from "@/app/actions/core";
+import { visibleQuestions } from "@/lib/questions/visibility";
 import type { AnswerValue } from "@/lib/types";
 
 export function QuestionnaireClient({
@@ -15,42 +15,51 @@ export function QuestionnaireClient({
   saved: Record<string, AnswerValue>;
 }) {
   const router = useRouter();
-  const [index, setIndex] = useState(Math.min(startIndex, QUESTIONS.length - 1));
   const [answers, setAnswers] = useState(saved);
+  const visible = visibleQuestions(answers);
+  const [index, setIndex] = useState(Math.min(startIndex, Math.max(visible.length - 1, 0)));
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
-  const question = QUESTIONS[index];
+  const safeIndex = Math.min(index, Math.max(visible.length - 1, 0));
+  const question = visible[safeIndex];
 
-  function go(nextIndex: number, value: AnswerValue) {
+  function go(value: AnswerValue) {
+    if (!question) return;
+    const nextAnswers = { ...answers, [question.id]: value };
+    const nextVisible = visibleQuestions(nextAnswers);
+    const pos = nextVisible.findIndex((item) => item.id === question.id);
+    const nextPos = pos + 1;
     setError(null);
     startTransition(async () => {
       try {
-        await saveAnswer(question.id, value, nextIndex);
-        setAnswers((prev) => ({ ...prev, [question.id]: value }));
-        if (nextIndex >= QUESTIONS.length) {
+        await saveAnswer(question.id, value, nextPos);
+        setAnswers(nextAnswers);
+        if (nextPos >= nextVisible.length) {
           await completeAssessment();
           router.push("/reflection");
           router.refresh();
           return;
         }
-        setIndex(nextIndex);
+        setIndex(nextPos);
       } catch (err) {
         setError(err instanceof Error ? err.message : "Could not save.");
       }
     });
   }
 
+  if (!question) return null;
+
   return (
     <div>
       <QuestionCard
         key={question.id}
         question={question}
-        index={index}
-        total={QUESTIONS.length}
+        index={safeIndex}
+        total={visible.length}
         sectionLabel={question.sectionTitle}
         initialValue={answers[question.id]}
-        onBack={index > 0 ? () => setIndex(index - 1) : undefined}
-        onContinue={(value) => go(index + 1, value)}
+        onBack={safeIndex > 0 ? () => setIndex(safeIndex - 1) : undefined}
+        onContinue={go}
         saving={pending}
       />
       {error ? <p className="mt-4 text-sm text-clay">{error}</p> : null}

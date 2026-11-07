@@ -1,9 +1,8 @@
-import type { SelfReport, StoredAnswer } from "@/lib/types";
+import type { AnswerValue, SelfReport, StoredAnswer } from "@/lib/types";
 import { countTags, has } from "@/lib/engine/tags-from-answers";
 import { TAGS as T } from "@/lib/engine/tags";
 import { QUESTION_BY_ID } from "@/lib/questions/data";
 import { formatAnswerValue } from "@/lib/questions/format-answer";
-import { IMPORTANCE_LABELS, type ImportanceLevel } from "@/lib/types";
 
 interface Rule {
   id: string;
@@ -38,18 +37,39 @@ function answerText(answers: StoredAnswer[], questionId: string) {
   return !text || text === "—" ? null : text;
 }
 
+function selectedIds(answers: StoredAnswer[], questionId: string) {
+  const found = answers.find((item) => item.questionId === questionId);
+  if (!found) return [];
+  return optionIdsIn(found.value);
+}
+
+function optionIdsIn(value: AnswerValue) {
+  if (value.kind === "single") return value.optionId ? [value.optionId] : [];
+  if (value.kind === "multi") return value.optionIds;
+  if (value.kind === "ranking") return value.orderedIds;
+  return [];
+}
+
+function quoteSelected(answers: StoredAnswer[], questionId: string, onlyIds?: string[]) {
+  const ids = selectedIds(answers, questionId);
+  const picked = onlyIds ? ids.filter((id) => onlyIds.includes(id)) : ids;
+  if (picked.length === 0) return null;
+  const value: AnswerValue =
+    picked.length === 1 ? { kind: "single", optionId: picked[0] } : { kind: "multi", optionIds: picked };
+  const text = formatAnswerValue(questionId, value);
+  return !text || text === "—" ? null : text;
+}
+
+function lifePicture(answers: StoredAnswer[], optionIds: string[]) {
+  const text = quoteSelected(answers, "life_at_60", optionIds);
+  return text ? `In the later life you picture: ${text}` : null;
+}
+
 function rankPosition(answers: StoredAnswer[], questionId: string, optionId: string) {
   const found = answers.find((item) => item.questionId === questionId);
   if (!found || found.value.kind !== "ranking") return null;
   const index = found.value.orderedIds.indexOf(optionId);
   return index < 0 ? null : index + 1;
-}
-
-function importanceLabel(answers: StoredAnswer[], itemId: string) {
-  const found = answers.find((item) => item.questionId === "importance_map");
-  if (!found || found.value.kind !== "importance") return null;
-  const level = found.value.ratings[itemId];
-  return level ? IMPORTANCE_LABELS[level] : null;
 }
 
 function joinSentences(parts: string[]) {
@@ -60,156 +80,142 @@ function describeTheme(id: string, fallback: string, answers: StoredAnswer[]) {
   const builders: Record<string, () => string[]> = {
     intellectual: () => {
       const parts: string[] = [];
-      const ideasRank = rankPosition(answers, "values_rank", "ideas");
-      if (ideasRank) {
-        parts.push(
-          ideasRank === 1
-            ? "You ranked ideas, curiosity, and mental engagement first among the things that should shape a shared life."
-            : `You ranked ideas, curiosity, and mental engagement ${ideasRank} among the things that should shape a shared life.`,
-        );
-      }
-      const evening = answerText(answers, "intellectual_evening");
-      if (evening) parts.push(`On a typical evening, what you actually want is: ${evening}`);
       const need = answerText(answers, "intellectual_need");
-      if (need) parts.push(`Asked how important it is that a partner is someone you can think with, you said: ${need}`);
-      const clash = answerText(answers, "intellectual_disagreement");
-      if (clash) parts.push(`When you disagree about ideas: ${clash}`);
-      const weight = importanceLabel(answers, "intellectual");
-      if (weight) parts.push(`You marked intellectual companionship as ${weight.toLowerCase()}.`);
+      if (need) parts.push(`On being able to think with a partner: ${need}`);
+      const ideas = quoteSelected(answers, "shared_time", ["ideas"]);
+      if (ideas) parts.push(`In ordinary time together, you included: ${ideas}`);
+      const picture = lifePicture(answers, ["thinking"]);
+      if (picture) parts.push(picture);
       return parts;
     },
     emotional_safety: () => {
       const parts: string[] = [];
-      const closeRank = rankPosition(answers, "values_rank", "connection");
-      if (closeRank) {
+      const affectionRank = rankPosition(answers, "marriage_foundations", "affection");
+      if (affectionRank) {
         parts.push(
-          closeRank === 1
-            ? "Emotional closeness came first in your ranking of what should shape a shared life."
-            : `Emotional closeness sat at number ${closeRank} in your ranking of what should shape a shared life.`,
+          affectionRank === 1
+            ? "Affection came first in what you ranked as foundational in a marriage."
+            : `Affection sat at number ${affectionRank} in what you ranked as foundational in a marriage.`,
         );
       }
-      const picture = answerText(answers, "good_life");
-      if (picture) parts.push(`The picture of a good life you chose was: ${picture}`);
-      const space = answerText(answers, "closeness_space");
-      if (space) parts.push(`On closeness versus breathing room: ${space}`);
+      const attachment = answerText(answers, "attachment");
+      if (attachment) parts.push(`On what helps you feel settled when you are close to someone: ${attachment}`);
       const hard = answerText(answers, "hard_times");
       if (hard) parts.push(`In a difficult season, what you most need is: ${hard}`);
+      const expression = answerText(answers, "expression");
+      if (expression) parts.push(`On how you want feelings expressed: ${expression}`);
+      const spark = answerText(answers, "spark");
+      if (spark) parts.push(`If the spark feels like it is fading: ${spark}`);
+      const picture = lifePicture(answers, ["close"]);
+      if (picture) parts.push(picture);
       return parts;
     },
     career_growth: () => {
       const parts: string[] = [];
-      const workRank = rankPosition(answers, "values_rank", "achievement");
-      const growthRank = rankPosition(answers, "values_rank", "growth");
-      if (workRank) parts.push(`Achievement and ambition ranked ${workRank} in what should shape a shared life.`);
-      if (growthRank) parts.push(`Growth and learning ranked ${growthRank}.`);
-      const relocate = answerText(answers, "relocation_career");
-      if (relocate) parts.push(`If one of you had a career opportunity that required a move: ${relocate}`);
+      const directionRank = rankPosition(answers, "marriage_foundations", "direction");
+      if (directionRank) parts.push(`A shared direction ranked ${directionRank} among the foundations of a marriage.`);
+      const relocate = answerText(answers, "relocation_career") ?? answerText(answers, "career_goals");
+      if (relocate) parts.push(`If a partner’s career required a move: ${relocate}`);
       const dual = answerText(answers, "dual_career");
-      if (dual) parts.push(`On two careers in one household: ${dual}`);
-      const hours = answerText(answers, "work_hours");
-      if (hours) parts.push(`On long or intense work seasons: ${hours}`);
-      const protect = answerText(answers, "protect_year");
-      if (protect) parts.push(`If the next year could protect only a few things, you included: ${protect}`);
-      const weight = importanceLabel(answers, "career");
-      if (weight) parts.push(`You marked career as ${weight.toLowerCase()}.`);
+      if (dual) parts.push(`On two careers inside one relationship: ${dual}`);
+      const picture = lifePicture(answers, ["building", "becoming"]);
+      if (picture) parts.push(picture);
       return parts;
     },
     independence: () => {
       const parts: string[] = [];
-      const indepRank = rankPosition(answers, "values_rank", "independence");
-      const freeRank = rankPosition(answers, "values_rank", "freedom");
-      if (indepRank) parts.push(`Personal independence ranked ${indepRank} in what should shape a shared life.`);
-      if (freeRank) parts.push(`Freedom and flexibility ranked ${freeRank}.`);
-      const space = answerText(answers, "closeness_space");
-      if (space) parts.push(`On how much togetherness you can live with: ${space}`);
-      const decide = answerText(answers, "decisions");
-      if (decide) parts.push(`On major decisions: ${decide}`);
-      const unit = answerText(answers, "couple_unit");
-      if (unit) parts.push(`On the couple versus the wider family: ${unit}`);
-      const weight = importanceLabel(answers, "independence");
-      if (weight) parts.push(`You marked independence as ${weight.toLowerCase()}.`);
+      const selfRank = rankPosition(answers, "marriage_foundations", "self");
+      if (selfRank) parts.push(`Room to stay oneself ranked ${selfRank} among the foundations of a marriage.`);
+      const flex = answerText(answers, "lifestyle_flexibility");
+      if (flex) parts.push(`If a partner’s rhythm differs from yours: ${flex}`);
+      const attachment = answerText(answers, "attachment");
+      if (attachment) parts.push(`On closeness and space: ${attachment}`);
+      const live = answerText(answers, "where_live");
+      if (live) parts.push(`On where you would live: ${live}`);
+      const inlaws = answerText(answers, "inlaws");
+      if (inlaws) parts.push(`On parents having a say in how you live: ${inlaws}`);
+      const loyalty = answerText(answers, "loyalty");
+      if (loyalty) parts.push(`On what you believe helps a couple stay faithful: ${loyalty}`);
+      const picture = lifePicture(answers, ["independent", "open"]);
+      if (picture) parts.push(picture);
       return parts;
     },
     family: () => {
       const parts: string[] = [];
-      const familyRank = rankPosition(answers, "values_rank", "family");
+      const familyRank = rankPosition(answers, "marriage_foundations", "family");
       if (familyRank) {
         parts.push(
           familyRank === 1
-            ? "Close family relationships came first in your ranking of what should shape a shared life."
-            : `Close family relationships ranked ${familyRank} in what should shape a shared life.`,
+            ? "Family belonging came first in what you ranked as foundational in a marriage."
+            : `Family belonging ranked ${familyRank} in what you ranked as foundational in a marriage.`,
         );
       }
-      const weekend = answerText(answers, "weekend_family");
-      if (weekend) parts.push(`On weekends with relatives: ${weekend}`);
+      const inlaws = answerText(answers, "inlaws");
+      if (inlaws) parts.push(`On parents having a say in how you live: ${inlaws}`);
       const live = answerText(answers, "where_live");
       if (live) parts.push(`On where you would live: ${live}`);
-      const parents = answerText(answers, "parents_role");
-      if (parents) parts.push(`On the role of parents after marriage: ${parents}`);
-      const inlaws = answerText(answers, "inlaws");
-      if (inlaws) parts.push(`On in-laws: ${inlaws}`);
-      const weight = importanceLabel(answers, "family_role");
-      if (weight) parts.push(`You marked family involvement as ${weight.toLowerCase()}.`);
+      const festivals = answerText(answers, "festivals");
+      if (festivals) parts.push(`On festivals and family ceremonies: ${festivals}`);
+      const tradition = answerText(answers, "tradition_tradeoff");
+      if (tradition) parts.push(`When tradition and a new way of doing things are in tension: ${tradition}`);
+      const picture = lifePicture(answers, ["family", "rooted"]);
+      if (picture) parts.push(picture);
       return parts;
     },
     stability: () => {
       const parts: string[] = [];
-      const stabRank = rankPosition(answers, "values_rank", "stability");
-      if (stabRank) parts.push(`Stability and security ranked ${stabRank} in what should shape a shared life.`);
-      const picture = answerText(answers, "good_life");
-      if (picture) parts.push(`Your picture of a good life: ${picture}`);
-      const money = answerText(answers, "saving_spending");
-      if (money) parts.push(`On saving and spending: ${money}`);
+      const practicalRank = rankPosition(answers, "marriage_foundations", "practical");
+      if (practicalRank) parts.push(`A practical partnership ranked ${practicalRank} among the foundations of a marriage.`);
+      const picture = lifePicture(answers, ["rooted"]);
+      if (picture) parts.push(picture);
+      const goal = answerText(answers, "financial_goal");
+      if (goal) parts.push(`On what you want money to do: ${goal}`);
       const joint = answerText(answers, "joint_money");
-      if (joint) parts.push(`On how money should be held: ${joint}`);
-      const risk = answerText(answers, "risk");
-      if (risk) parts.push(`On financial risk: ${risk}`);
-      const weight = importanceLabel(answers, "money");
-      if (weight) parts.push(`You marked money as ${weight.toLowerCase()}.`);
+      if (joint) parts.push(`On how money should be handled: ${joint}`);
+      const contribution = answerText(answers, "contribution");
+      if (contribution) parts.push(`If one partner earns more: ${contribution}`);
       return parts;
     },
     balance: () => {
       const parts: string[] = [];
-      const protect = answerText(answers, "protect_year");
-      if (protect) parts.push(`If the next year could protect only a few things, you chose: ${protect}`);
-      const hours = answerText(answers, "work_hours");
-      if (hours) parts.push(`On work hours: ${hours}`);
-      const social = answerText(answers, "social_travel");
-      if (social) parts.push(`On social life and travel: ${social}`);
+      const lifestyle = answerText(answers, "lifestyle_type");
+      if (lifestyle) parts.push(`The lifestyle that feels most like you: ${lifestyle}`);
+      const flex = answerText(answers, "lifestyle_flexibility");
+      if (flex) parts.push(`On bending toward a partner’s rhythm: ${flex}`);
       const shared = answerText(answers, "shared_time");
-      if (shared) parts.push(`The time together you would protect: ${shared}`);
+      if (shared) parts.push(`On ordinary time together: ${shared}`);
+      const substances = answerText(answers, "substances");
+      if (substances) parts.push(`On alcohol and smoking in social life: ${substances}`);
+      const picture = lifePicture(answers, ["social", "rooted", "open", "independent"]);
+      if (picture) parts.push(picture);
       return parts;
     },
     children: () => {
       const parts: string[] = [];
       const desire = answerText(answers, "children_desire");
-      if (desire) parts.push(`On whether you want children: ${desire}`);
-      const philosophy = answerText(answers, "parenting_philosophy");
-      if (philosophy) parts.push(`On parenting: ${philosophy}`);
-      const care = answerText(answers, "childcare_split");
-      if (care) parts.push(`On care: ${care}`);
-      const education = answerText(answers, "education");
-      if (education) parts.push(`On a child's education: ${education}`);
-      const weight = importanceLabel(answers, "children");
-      if (weight) parts.push(`You marked children as ${weight.toLowerCase()}.`);
+      if (desire) parts.push(`On children: ${desire}`);
+      const parenting = answerText(answers, "childcare_split");
+      if (parenting) parts.push(`On how you would want care split: ${parenting}`);
+      const picture = lifePicture(answers, ["family"]);
+      if (picture) parts.push(picture);
       return parts;
     },
     open_talk: () => {
       const parts: string[] = [];
-      const disagreement = answerText(answers, "disagreement");
-      if (disagreement) parts.push(`When you disagree: ${disagreement}`);
       const expression = answerText(answers, "expression");
       if (expression) parts.push(`On saying what you feel: ${expression}`);
-      const repair = answerText(answers, "repair");
-      if (repair) parts.push(`On repair after a fight: ${repair}`);
-      const decide = answerText(answers, "conflict_decision");
-      if (decide) parts.push(`If you are stuck: ${decide}`);
+      const spark = answerText(answers, "spark");
+      if (spark) parts.push(`If the spark feels like it is fading: ${spark}`);
+      const disagreement = answerText(answers, "disagreement");
+      if (disagreement) parts.push(`When you strongly disagree: ${disagreement}`);
+      const decision = answerText(answers, "conflict_decision");
+      if (decision) parts.push(`If a decision still has to be made during conflict: ${decision}`);
       return parts;
     },
   };
 
   const parts = builders[id]?.() ?? [];
-  return parts.length >= 2 ? joinSentences(parts) : fallback;
+  return parts.length >= 1 ? joinSentences(parts) : fallback;
 }
 
 const ORIENTATION_RULES: Rule[] = [
@@ -355,6 +361,7 @@ const EXPECTATION_BUILDERS: { area: string; lines: Rule[] }[] = [
     lines: [
       { id: "l1", any: [T.lifestyle_active, T.travel_high, T.social_life_high], text: "An active, outward-facing life — people, movement, plans — shows up in what you want to share." },
       { id: "l2", any: [T.lifestyle_quiet], text: "Quieter rhythms and a less crowded calendar appear to matter to you." },
+      { id: "l3", any: [T.substances_absent], text: "Alcohol and smoking are not part of the social life you want." },
     ],
   },
   {
@@ -415,19 +422,110 @@ const SELF_QUESTIONS: Rule[] = [
   { id: "q6", any: [T.conflict_direct, T.conflict_avoidant, T.conflict_space], text: "When you have been hurt in the past, what actually helped you re-enter the relationship — and what left you more alone?" },
 ];
 
-function nonNegotiablesFromAnswers(answers: StoredAnswer[]) {
-  const importance = answers.find((a) => a.questionId === "importance_map");
-  const items: SelfReport["nonNegotiables"] = [];
-  if (importance?.value.kind === "importance") {
-    const question = QUESTION_BY_ID.importance_map;
-    for (const item of question.items ?? []) {
-      const level = importance.value.ratings[item.id] as ImportanceLevel | undefined;
-      if (level === "non_negotiable") {
-        items.push({ label: item.label, note: IMPORTANCE_LABELS[level] });
-      }
-    }
+/**
+ * Option ids that read as unsettled even if tagging was missed.
+ * Keyed by question so a reused id such as "open" is not treated as uncertainty everywhere.
+ * Childhood is intentionally absent: remembering childhood is not the same as being undecided.
+ */
+const INDECISIVE_OPTIONS: Record<string, readonly string[]> = {
+  career_goals: ["unthought", "depends"],
+  relocation_career: ["depends"],
+  attachment: ["depends", "swing"],
+  spark: ["unsure"],
+  intellectual_need: ["unsure"],
+  tradition_tradeoff: ["unsure"],
+  children_desire: ["open", "later"],
+  lifestyle_flexibility: ["settling"],
+  inlaws: ["case"],
+  healing: ["middle"],
+  past_relationships: ["prefer_not_say"],
+  loyalty: ["fragile"],
+};
+
+const UNCERTAINTY_PRIORITY = [
+  "children_desire",
+  "childcare_split",
+  "career_goals",
+  "relocation_career",
+  "disagreement",
+  "conflict_decision",
+  "spark",
+  "inlaws",
+  "tradition_tradeoff",
+  "where_live",
+  "festivals",
+  "joint_money",
+  "financial_goal",
+  "saving_spending",
+  "contribution",
+  "risk",
+  "intellectual_need",
+  "lifestyle_flexibility",
+  "attachment",
+  "loyalty",
+  "dual_career",
+  "substances",
+  "healing",
+  "past_relationships",
+  "non_negotiables",
+];
+
+function topicPhrase(questionId: string) {
+  const question = QUESTION_BY_ID[questionId];
+  if (!question) return "this";
+  if (question.id === "tradition_tradeoff") return "how you hold family tradition against a new way of doing things";
+  if (question.id === "career_goals" || question.id === "relocation_career") return "a move for a partner’s career";
+  const explored = question.explored.trim();
+  if (explored.length > 3) return explored.charAt(0).toLowerCase() + explored.slice(1);
+  return question.sectionTitle.toLowerCase();
+}
+
+function uncertaintyReflections(answers: StoredAnswer[]) {
+  const found: { rank: number; quote: string; questionId: string; text: string }[] = [];
+  for (const answer of answers) {
+    const question = QUESTION_BY_ID[answer.questionId];
+    if (!question || question.id === "childhood") continue;
+    const uncertain = optionIdsIn(answer.value).filter((optionId) => {
+      const option = question.options?.find((item) => item.id === optionId);
+      if (!option) return false;
+      if (option.tags.includes(T.uncertainty_present)) return true;
+      return INDECISIVE_OPTIONS[question.id]?.includes(optionId) ?? false;
+    });
+    if (uncertain.length === 0) continue;
+    const quote = quoteSelected(answers, question.id, uncertain);
+    if (!quote) continue;
+    const rank = UNCERTAINTY_PRIORITY.indexOf(question.id);
+    const spoken = quote.replace(/[.]+$/, "");
+    found.push({
+      rank: rank === -1 ? UNCERTAINTY_PRIORITY.length : rank,
+      quote,
+      questionId: question.id,
+      text: `On ${topicPhrase(question.id)}, you said “${spoken}.” You have not settled this, and it may help to notice what would make it clearer before you and a partner treat it as agreed.`,
+    });
   }
-  return items;
+
+  found.sort((a, b) => a.rank - b.rank);
+  const kept: typeof found = [];
+  for (const item of found) {
+    const relocationPair = item.questionId === "career_goals" || item.questionId === "relocation_career";
+    const repeatsMove = relocationPair && kept.some((existing) => existing.quote === item.quote && (existing.questionId === "career_goals" || existing.questionId === "relocation_career"));
+    if (repeatsMove) continue;
+    if (kept.some((existing) => existing.text === item.text)) continue;
+    kept.push(item);
+    if (kept.length >= 5) break;
+  }
+  return kept.map((item) => item.text);
+}
+
+function nonNegotiablesFromAnswers(answers: StoredAnswer[]) {
+  const found = answers.find((item) => item.questionId === "non_negotiables");
+  if (!found || found.value.kind !== "multi") return [];
+  const question = QUESTION_BY_ID.non_negotiables;
+  const limit = question?.maxSelect ?? 3;
+  return found.value.optionIds.slice(0, limit).map((optionId) => ({
+    label: question?.options?.find((option) => option.id === optionId)?.label ?? optionId,
+    note: "Hardest to compromise on",
+  }));
 }
 
 export function generateSelfReport(answers: StoredAnswer[]): SelfReport {
@@ -469,7 +567,7 @@ export function generateSelfReport(answers: StoredAnswer[]): SelfReport {
     strengths.push("You completed a careful reflection. Willingness to look at your own preferences is already a form of partnership readiness.");
   }
 
-  const reflections = pick(counts, REFLECT_RULES, 4);
+  const reflections = [...uncertaintyReflections(answers), ...pick(counts, REFLECT_RULES, 4)];
   const selfQuestions = pick(counts, SELF_QUESTIONS, 5);
   if (selfQuestions.length < 3) {
     selfQuestions.push("Which of your preferences are about the life you want, and which are about the life you think you are supposed to want?");

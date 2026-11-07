@@ -79,9 +79,31 @@ export function mapAuthError(message: string, mode: "login" | "signup"): string 
   return message || "Something went wrong. Please try again.";
 }
 
-export function authCallbackUrl(): string {
-  if (typeof window !== "undefined") return `${window.location.origin}/auth/callback`;
-  const configured = process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "");
-  if (configured) return `${configured}/auth/callback`;
-  return "http://localhost:3000/auth/callback";
+export function safeNextPath(next: string | null | undefined, fallback = "/home"): string {
+  if (!next) return fallback;
+  const value = next.trim();
+  if (!value || value.length > 512) return fallback;
+  if (!value.startsWith("/") || value.startsWith("//") || value.startsWith("/\\")) return fallback;
+  let decoded = value;
+  try {
+    decoded = decodeURIComponent(value);
+  } catch {
+    return fallback;
+  }
+  const pathname = decoded.split("?")[0] ?? "";
+  if (!pathname.startsWith("/") || pathname.startsWith("//") || pathname.includes("\\") || pathname.includes("://") || decoded.includes("\0")) {
+    return fallback;
+  }
+  if (["/auth", "/login", "/signup"].some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`))) return fallback;
+  return decoded;
+}
+
+export function authCallbackUrl(nextPath?: string): string {
+  const origin =
+    typeof window !== "undefined"
+      ? window.location.origin
+      : process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") || "http://localhost:3000";
+  const url = new URL("/auth/callback", origin);
+  if (nextPath) url.searchParams.set("next", safeNextPath(nextPath));
+  return url.toString();
 }

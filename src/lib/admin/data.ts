@@ -1,5 +1,6 @@
 import { createServiceSupabase } from "@/lib/supabase/service";
 import { QUESTIONS } from "@/lib/questions/data";
+import { isQuestionVisible } from "@/lib/questions/visibility";
 import { formatAnswerValue } from "@/lib/questions/format-answer";
 import type { AnswerValue } from "@/lib/types";
 
@@ -37,7 +38,7 @@ export type AdminCoupleRow = {
 };
 
 export type AdminUserDetail = AdminUserRow & {
-  sections: { title: string; items: { questionId: string; question: string; answer: string }[] }[];
+  sections: { title: string; items: { questionId: string; explored: string; question: string; answer: string }[] }[];
 };
 
 async function emailMap(service: NonNullable<ReturnType<typeof createServiceSupabase>>) {
@@ -211,9 +212,11 @@ export async function loadAdminUser(userId: string): Promise<{ detail: AdminUser
   const sectionMap = new Map<string, AdminUserDetail["sections"][number]>();
 
   for (const question of QUESTIONS) {
+    if (!isQuestionVisible(question, byQuestion)) continue;
     const block = sectionMap.get(question.dimension) ?? { title: question.sectionTitle, items: [] };
     block.items.push({
       questionId: question.id,
+      explored: question.explored,
       question: question.question,
       answer: formatAnswerValue(question.id, byQuestion.get(question.id)),
     });

@@ -1,5 +1,6 @@
 import { AuthForm } from "@/components/AuthForm";
 import { PublicHeader } from "@/components/PublicHeader";
+import { safeNextPath } from "@/lib/auth/validation";
 
 export default async function SignupPage({ searchParams }: { searchParams: Promise<{ next?: string }> }) {
   const { next } = await searchParams;
@@ -11,7 +12,7 @@ export default async function SignupPage({ searchParams }: { searchParams: Promi
         <h1 className="mt-4 font-serif text-4xl">Go beyond the biodata.</h1>
         <p className="mt-3 text-sm text-paper/60">Create an account to begin. Your answers stay private.</p>
         <div className="mt-10">
-          <AuthForm mode="signup" nextPath={next || "/discover"} />
+          <AuthForm mode="signup" nextPath={safeNextPath(next, "/discover")} />
         </div>
       </div>
     </div>

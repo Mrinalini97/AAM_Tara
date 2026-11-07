@@ -1,5 +1,6 @@
 import { AuthForm } from "@/components/AuthForm";
 import { PublicHeader } from "@/components/PublicHeader";
+import { safeNextPath } from "@/lib/auth/validation";
 
 export default async function LoginPage({
   searchParams,
@@ -16,7 +17,7 @@ export default async function LoginPage({
         <p className="mt-3 text-sm text-paper/60">Pick up your reflection where you left it.</p>
         {error ? <p className="mt-4 text-sm text-gold">{error}</p> : null}
         <div className="mt-10">
-          <AuthForm mode="login" nextPath={next || "/home"} />
+          <AuthForm mode="login" nextPath={safeNextPath(next, "/home")} />
         </div>
       </div>
     </div>

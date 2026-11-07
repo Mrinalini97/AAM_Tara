@@ -1,14 +1,25 @@
 "use client";
 
 import { useState } from "react";
-import { QUESTIONS } from "@/lib/questions/data";
 import { QuestionCard } from "@/components/questionnaire/QuestionCard";
+import { visibleQuestions } from "@/lib/questions/visibility";
 import type { AnswerValue } from "@/lib/types";
 
 export function QuestionnairePreview() {
   const [index, setIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, AnswerValue>>({});
-  const question = QUESTIONS[index];
+  const [done, setDone] = useState(false);
+  const visible = visibleQuestions(answers);
+  const safeIndex = Math.min(index, Math.max(visible.length - 1, 0));
+  const question = visible[safeIndex];
+
+  if (done || !question) {
+    return (
+      <p className="rounded-2xl border border-line bg-white/50 px-4 py-3 text-sm text-ink-soft">
+        Preview complete. These answers stayed in this browser tab and were not saved.
+      </p>
+    );
+  }
 
   return (
     <div>
@@ -18,14 +29,18 @@ export function QuestionnairePreview() {
       <QuestionCard
         key={question.id}
         question={question}
-        index={index}
-        total={QUESTIONS.length}
+        index={safeIndex}
+        total={visible.length}
         sectionLabel={question.sectionTitle}
         initialValue={answers[question.id]}
-        onBack={index > 0 ? () => setIndex(index - 1) : undefined}
+        onBack={safeIndex > 0 ? () => setIndex(safeIndex - 1) : undefined}
         onContinue={(value) => {
-          setAnswers((prev) => ({ ...prev, [question.id]: value }));
-          if (index + 1 < QUESTIONS.length) setIndex(index + 1);
+          const nextAnswers = { ...answers, [question.id]: value };
+          const nextVisible = visibleQuestions(nextAnswers);
+          const pos = nextVisible.findIndex((item) => item.id === question.id);
+          setAnswers(nextAnswers);
+          if (pos + 1 >= nextVisible.length) setDone(true);
+          else setIndex(pos + 1);
         }}
       />
     </div>
