@@ -40,7 +40,10 @@ export function InvitePanel({
     <div className="mt-8 rounded-3xl border border-line bg-white/50 p-6">
       {link ? (
         <>
-          <p className="text-sm text-ink-soft">Share this private link. Do not post it publicly.</p>
+          <p className="text-sm text-ink-soft">
+            Share this private link. Do not post it publicly. If they already finished, they sign in
+            with that account and open the link. Their questionnaire is reused.
+          </p>
           <p className="mt-3 break-all rounded-2xl bg-paper-deep px-4 py-3 text-sm">{link}</p>
           <div className="mt-4 flex flex-wrap gap-3">
             <Button type="button" onClick={copy}>
@@ -48,7 +51,9 @@ export function InvitePanel({
             </Button>
           </div>
           {status === "pending" ? (
-            <p className="mt-4 text-sm text-ink-soft">Waiting for them to begin — independently.</p>
+            <p className="mt-4 text-sm text-ink-soft">
+              Waiting for them to open the link. A finished reflection is linked, not started over.
+            </p>
           ) : null}
         </>
       ) : (

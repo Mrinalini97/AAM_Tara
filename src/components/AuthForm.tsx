@@ -1,9 +1,17 @@
 "use client";
 
 import { createBrowserSupabase } from "@/lib/supabase/client";
-import { authCallbackUrl, mapAuthError, safeNextPath, validateDisplayName, validateEmail, validatePassword } from "@/lib/auth/validation";
+import {
+  authCallbackUrl,
+  mapAuthError,
+  safeNextPath,
+  validateAge,
+  validateDisplayName,
+  validateEmail,
+  validatePassword,
+  validateUsername,
+} from "@/lib/auth/validation";
 import { useState } from "react";
-import Link from "next/link";
 import { Button } from "@/components/ui/Button";
 import { useRouter } from "next/navigation";
 
@@ -13,12 +21,18 @@ function rememberNext(path: string) {
   document.cookie = `${AUTH_NEXT_COOKIE}=${encodeURIComponent(path)}; Path=/; Max-Age=3600; SameSite=Lax`;
 }
 
+const fieldClass =
+  "mt-1 w-full border border-white/15 bg-white/5 px-4 py-3 text-paper outline-none focus:border-flare";
+
 export function AuthForm({ mode, nextPath = "/home" }: { mode: "login" | "signup"; nextPath?: string }) {
   const router = useRouter();
   const destination = safeNextPath(nextPath, mode === "signup" ? "/discover" : "/home");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [name, setName] = useState("");
+  const [age, setAge] = useState("");
+  const [username, setUsername] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [awaitingConfirm, setAwaitingConfirm] = useState(false);
@@ -27,13 +41,6 @@ export function AuthForm({ mode, nextPath = "/home" }: { mode: "login" | "signup
     e.preventDefault();
     setError(null);
 
-    if (mode === "signup") {
-      const nameError = validateDisplayName(name);
-      if (nameError) {
-        setError(nameError);
-        return;
-      }
-    }
     const emailError = validateEmail(email);
     if (emailError) {
       setError(emailError);
@@ -45,6 +52,28 @@ export function AuthForm({ mode, nextPath = "/home" }: { mode: "login" | "signup
       return;
     }
 
+    if (mode === "signup") {
+      const nameError = validateDisplayName(name);
+      if (nameError) {
+        setError(nameError);
+        return;
+      }
+      const ageError = validateAge(age);
+      if (ageError) {
+        setError(ageError);
+        return;
+      }
+      const usernameError = validateUsername(username);
+      if (usernameError) {
+        setError(usernameError);
+        return;
+      }
+      if (password !== confirmPassword) {
+        setError("Those passwords do not match.");
+        return;
+      }
+    }
+
     setLoading(true);
     try {
       const supabase = createBrowserSupabase();
@@ -54,7 +83,11 @@ export function AuthForm({ mode, nextPath = "/home" }: { mode: "login" | "signup
           email: email.trim(),
           password,
           options: {
-            data: { display_name: name.trim() },
+            data: {
+              display_name: name.trim(),
+              age: Number(age),
+              username: username.trim().toLowerCase(),
+            },
             emailRedirectTo: authCallbackUrl(destination),
           },
         });
@@ -93,9 +126,6 @@ export function AuthForm({ mode, nextPath = "/home" }: { mode: "login" | "signup
           signing in. You will return to the page you were opening. Until you open it, you are not logged in.
         </p>
         <p className="text-sm text-paper/65">If you do not see it, check spam or promotions.</p>
-        <Link href={`/login?next=${encodeURIComponent(destination)}`} className="inline-block text-sm text-flare underline">
-          Go to sign in
-        </Link>
       </div>
     );
   }
@@ -103,16 +133,39 @@ export function AuthForm({ mode, nextPath = "/home" }: { mode: "login" | "signup
   return (
     <form onSubmit={onSubmit} className="mx-auto max-w-md space-y-4" noValidate>
       {mode === "signup" ? (
-        <label className="block text-sm">
-          <span className="text-paper/60">What should we call you?</span>
-          <input
-            required
-            autoComplete="name"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            className="mt-1 w-full border border-white/15 bg-white/5 px-4 py-3 text-paper outline-none focus:border-flare"
-          />
-        </label>
+        <>
+          <label className="block text-sm">
+            <span className="text-paper/60">Full name</span>
+            <input
+              required
+              autoComplete="name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className={fieldClass}
+            />
+          </label>
+          <label className="block text-sm">
+            <span className="text-paper/60">Age</span>
+            <input
+              required
+              inputMode="numeric"
+              autoComplete="bday-year"
+              value={age}
+              onChange={(e) => setAge(e.target.value)}
+              className={fieldClass}
+            />
+          </label>
+          <label className="block text-sm">
+            <span className="text-paper/60">Username</span>
+            <input
+              required
+              autoComplete="username"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              className={fieldClass}
+            />
+          </label>
+        </>
       ) : null}
       <label className="block text-sm">
         <span className="text-paper/60">Email</span>
@@ -123,7 +176,7 @@ export function AuthForm({ mode, nextPath = "/home" }: { mode: "login" | "signup
           inputMode="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className="mt-1 w-full border border-white/15 bg-white/5 px-4 py-3 text-paper outline-none focus:border-flare"
+          className={fieldClass}
         />
       </label>
       <label className="block text-sm">
@@ -135,33 +188,29 @@ export function AuthForm({ mode, nextPath = "/home" }: { mode: "login" | "signup
           minLength={8}
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          className="mt-1 w-full border border-white/15 bg-white/5 px-4 py-3 text-paper outline-none focus:border-flare"
+          className={fieldClass}
         />
         {mode === "signup" ? (
           <span className="mt-1 block text-xs text-paper/50">At least 8 characters, with a letter and a number.</span>
         ) : null}
       </label>
+      {mode === "signup" ? (
+        <label className="block text-sm">
+          <span className="text-paper/60">Confirm password</span>
+          <input
+            required
+            type="password"
+            autoComplete="new-password"
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            className={fieldClass}
+          />
+        </label>
+      ) : null}
       {error ? <p className="text-sm text-gold">{error}</p> : null}
       <Button type="submit" disabled={loading} className="w-full">
         {loading ? "Please wait…" : mode === "signup" ? "Create account" : "Sign in"}
       </Button>
-      <p className="text-center text-sm text-paper/55">
-        {mode === "signup" ? (
-          <>
-            Already have an account?{" "}
-            <Link href={`/login?next=${encodeURIComponent(destination)}`} className="text-flare underline">
-              Sign in
-            </Link>
-          </>
-        ) : (
-          <>
-            New here?{" "}
-            <Link href={`/signup?next=${encodeURIComponent(destination)}`} className="text-flare underline">
-              Create an account
-            </Link>
-          </>
-        )}
-      </p>
     </form>
   );
 }

@@ -45,6 +45,21 @@ export function validateEmail(raw: string): string | null {
   return null;
 }
 
+export function validateAge(raw: string): string | null {
+  const age = Number(raw);
+  if (!raw.trim() || !Number.isInteger(age)) return "Enter your age as a whole number.";
+  if (age < 18 || age > 120) return "Enter an age from 18 to 120.";
+  return null;
+}
+
+export function validateUsername(raw: string): string | null {
+  const username = raw.trim();
+  if (username.length < 3) return "Usernames need at least 3 characters.";
+  if (username.length > 24) return "Usernames can be at most 24 characters.";
+  if (!/^[A-Za-z0-9_]+$/.test(username)) return "Use only letters, numbers, and underscores.";
+  return null;
+}
+
 export function validatePassword(password: string, { forSignup }: { forSignup: boolean }): string | null {
   if (password.length < 8) return "Use at least 8 characters for your password.";
   if (password.length > 72) return "Passwords can be at most 72 characters.";
@@ -69,6 +84,12 @@ export function mapAuthError(message: string, mode: "login" | "signup"): string 
   }
   if (lower.includes("already registered") || lower.includes("already been registered")) {
     return "An account with this email already exists. Sign in instead.";
+  }
+  if (lower.includes("load failed") || lower.includes("failed to fetch") || lower.includes("network")) {
+    return "Could not reach the account service. It was paused, so sign-in could not connect. Try again in a minute.";
+  }
+  if (lower.includes("username") && (lower.includes("taken") || lower.includes("duplicate") || lower.includes("unique"))) {
+    return "That username is already taken. Choose another.";
   }
   if (lower.includes("password")) {
     return message;

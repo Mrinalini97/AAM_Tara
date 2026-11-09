@@ -95,11 +95,13 @@ export async function createPartnerInvitation() {
 }
 
 export async function acceptInvitation(token: string) {
-  const { supabase } = await requireUser();
-  const { data, error } = await supabase.rpc("accept_invitation", { invite_token: token });
+  const { supabase, user } = await requireUser();
+  const { error } = await supabase.rpc("accept_invitation", { invite_token: token });
   if (error) throw new Error(error.message);
+  const ready = await maybeBuildComparison(supabase, user.id);
   revalidatePath("/home");
-  return data;
+  revalidatePath("/partner");
+  return { ready };
 }
 
 type PairSnapshot = {
@@ -114,6 +116,7 @@ async function maybeBuildComparison(
   supabase: Awaited<ReturnType<typeof createServerSupabase>>,
   userId: string,
 ) {
+  let linked = false;
   const { data: invitations } = await supabase
     .from("partner_invitations")
     .select("id, inviter_id, invitee_id")
@@ -125,7 +128,11 @@ async function maybeBuildComparison(
     const pair = snapshot as PairSnapshot;
     if (!pair.ready || !pair.a || !pair.b) continue;
     const { data: existing } = await supabase.from("comparisons").select("id").eq("invitation_id", invitation.id).maybeSingle();
-    if (existing) continue;
+    if (existing) {
+      await supabase.rpc("mark_invitation_ready", { p_invitation_id: invitation.id });
+      linked = true;
+      continue;
+    }
 
     const content = generateComparison(pair.a, pair.b);
     const prompts = generateConversationPrompts(pair.a, pair.b);
@@ -145,10 +152,12 @@ async function maybeBuildComparison(
       })),
     );
     await supabase.rpc("mark_invitation_ready", { p_invitation_id: invitation.id });
+    linked = true;
     revalidatePath("/understand-us");
     revalidatePath("/partner");
     revalidatePath("/partner/responses");
   }
+  return linked;
 }
 
 export async function setConversationStatus(promptId: string, status: string) {

@@ -24,6 +24,8 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000).
 
+Local test sign-in (regular account, not admin): `tester@tara.app` / `Testpass123` at `/signup?mode=login`.
+
 ## What you can do
 
 1. Create an account and complete the self-discovery questionnaire (progress is saved).
@@ -35,11 +37,13 @@ Open [http://localhost:3000](http://localhost:3000).
 
 ## Admin dashboard
 
-User onboarding, questionnaire selections, couple-report status, and whether both partners opened Understand us are only visible at [`/admin`](/admin), behind a separate admin login (not a regular account).
+User onboarding, questionnaire selections, couple-report status, and whether both partners opened Understand us are only visible at `/admin`, behind a separate admin login (not a regular account). Admins can generate or view a couple report at `/admin/couples/{invitationId}`, which uses `GET`/`POST` `/api/admin/couples/{invitationId}`.
+
+Production admin login: [https://zippy-drizzle-7rw5sc9-aam-tara.vercel.app/admin/login](https://zippy-drizzle-7rw5sc9-aam-tara.vercel.app/admin/login)
 
 If the live database already exists, run `supabase/comparison-views.sql` in the SQL editor so viewing the shared report can be recorded.
 
-1. Set `ADMIN_USERNAME`, `ADMIN_PASSWORD`, and `ADMIN_SESSION_SECRET` in `.env.local`.
+1. Set `ADMIN_USERNAME`, `ADMIN_PASSWORD`, and `ADMIN_SESSION_SECRET` in `.env.local` and in the Vercel project env.
 2. Open `/admin/login`. Default local credentials are `admin_manasa` / `admin123`.
 3. Keep `SUPABASE_SERVICE_ROLE_KEY` on the server so the dashboard can load all users.
 

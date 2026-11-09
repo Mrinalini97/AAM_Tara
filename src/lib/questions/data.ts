@@ -54,6 +54,7 @@ export const QUESTIONS: Question[] = [
     type: "single_select",
     required: true,
     question: "Imagine your partner receives an excellent career opportunity in another city. Which statement comes closest to your perspective?",
+    helper: "Answer for a real move, not a hypothetical you can undo next month. If you have not decided, say so.",
     options: [
       { id: "prioritize", label: "We should prioritize the career opportunity.", tags: [T.career_high, T.relocation_flexible, T.dual_career_supportive] },
       { id: "both", label: "We should find a solution that works equally for both careers.", tags: [T.dual_career_supportive, T.decisions_shared, T.career_balanced] },
@@ -71,6 +72,7 @@ export const QUESTIONS: Question[] = [
     type: "single_select",
     required: true,
     question: "When life gets difficult -illness, work stress, grief : What do you most need from a partner?",
+    helper: "Pick the help that actually steadies you, not the help you think you should want.",
     options: [
       { id: "present", label: "Presence: someone who stays close, even if they cannot fix it.", tags: [T.support_present, T.emotional_connection_high] },
       { id: "practical", label: "Practical help: taking things off my plate without needing a long conversation.", tags: [T.support_present] },
@@ -106,6 +108,7 @@ export const QUESTIONS: Question[] = [
     maxSelect: 3,
     required: true,
     question: "How would you most like to spend ordinary time together? Choose up to three.",
+    helper: "Think of a normal week, not a holiday. Choose the ways time together feels easiest.",
     options: [
       { id: "talk", label: "Long conversations", tags: [T.communication_open, T.intimacy_high] },
       { id: "ideas", label: "Talking about ideas, culture, or what we are learning", tags: [T.intellectual_high, T.curiosity_shared] },
@@ -125,6 +128,7 @@ export const QUESTIONS: Question[] = [
     type: "scenario",
     required: true,
     question: "You strongly disagree about something that will not go away on its own. What is your instinct?",
+    helper: "Choose your first move, not the one you wish you made after the argument.",
     options: [
       { id: "name", label: "Name it directly, even if the conversation is uncomfortable.", tags: [T.conflict_direct, T.communication_open] },
       { id: "soften", label: "Approach it carefully, maybe indirectly, to avoid unnecessary hurt.", tags: [T.conflict_indirect] },
@@ -141,6 +145,7 @@ export const QUESTIONS: Question[] = [
     type: "single_select",
     required: true,
     question: "How do you prefer emotional expression in a partnership?",
+    helper: "This is about how feelings are shown day to day, not how dramatic a fight becomes.",
     options: [
       { id: "open", label: "I want feelings spoken. Silence is harder for me than a difficult conversation.", tags: [T.emotional_expressive, T.communication_open, T.intimacy_high] },
       { id: "measured", label: "I value honesty, and I also prefer a calm, measured tone.", tags: [T.communication_open] },
@@ -155,6 +160,7 @@ export const QUESTIONS: Question[] = [
     type: "single_select",
     required: true,
     question: "If life feels overwhelming and the spark between you seems to be fading, what would you want to do?",
+    helper: "Choose what you would actually reach for, before you knew whether it would work.",
     options: [
       { id: "talk", label: "Talk it through until we both understand what is happening.", tags: [T.communication_open, T.conflict_direct, T.repair_important] },
       { id: "routines", label: "Change ordinary routines — time together, rest, or something we used to enjoy.", tags: [T.companionship_high, T.shared_activities_high, T.flexibility_high] },
@@ -171,6 +177,7 @@ export const QUESTIONS: Question[] = [
     type: "single_select",
     required: true,
     question: "How important is it that a partner is someone you can think with — not only live with?",
+    helper: "Thinking together means conversation and curiosity, not matching degrees or the same opinions.",
     options: [
       { id: "essential", label: "Essential. Feeling intellectually unmatched over time would be a real loss for me.", tags: [T.intellectual_high, T.curiosity_shared] },
       { id: "welcome", label: "Welcome and nourishing, but not the centre of what makes a partnership work.", tags: [T.intellectual_moderate] },
@@ -187,6 +194,7 @@ export const QUESTIONS: Question[] = [
     type: "single_select",
     required: true,
     question: "When family traditions and a new way of doing things are in tension, what usually feels right?",
+    helper: "Picture a real ceremony or habit your family expects, not tradition in the abstract.",
     options: [
       { id: "keep", label: "Keep the tradition unless there is a strong reason not to. Continuity matters.", tags: [T.tradition_high] },
       { id: "adapt", label: "Adapt traditions so they still feel meaningful, without copying them exactly.", tags: [T.tradition_flexible, T.family_balanced] },
@@ -202,6 +210,7 @@ export const QUESTIONS: Question[] = [
     type: "single_select",
     required: true,
     question: "How would you like to approach spirituality,festivals, rituals, and family ceremonies?",
+    helper: "Answer for the calendar you want to keep living, including the inconvenient days.",
     options: [
       { id: "full", label: "Participate fully, even when it is inconvenient. These hold a family together.", tags: [T.tradition_high, T.family_central] },
       { id: "choose", label: "Keep the ones that feel meaningful; skip or shorten others without guilt.", tags: [T.tradition_flexible] },
@@ -234,6 +243,7 @@ export const QUESTIONS: Question[] = [
     required: true,
     visibleWhen: { questionId: "children_desire", optionIds: ["yes","open"] },
     question: "After a child arrives, both careers are demanding. What would you want the default to be?",
+    helper: "Choose the arrangement you would want before anyone has already stepped back.",
     options: [
       { id: "equal", label: "We restructure both jobs as much as possible so care is genuinely shared.", tags: [T.parenting_shared, T.dual_career_supportive] },
       { id: "one_steps", label: "One person steps back for a period, by agreement, not by assumption.", tags: [T.dual_career_one_primary, T.flexibility_high] },
@@ -251,12 +261,12 @@ export const QUESTIONS: Question[] = [
     type: "single_select",
     required: true,
     question: "Have you been in a romantic relationship before?",
+    helper: "This stays part of your own picture. You can decline (skip) to say .",
     options: [
       { id: "never", label: "No, I've never been in a romantic relationship.", tags: [T.history_none] },
       { id: "serious", label: "Yes, I've been in a serious relationship.", tags: [T.history_serious] },
       { id: "casual", label: "Yes, I've been in a casual relationship.", tags: [T.history_casual] },
       { id: "both", label: "Yes, I've had both serious and casual relationships.", tags: [T.history_serious, T.history_casual] },
-      { id: "crushes_only", label: "I've had crushes, but never been in a relationship.", tags: [T.history_none] },
       { id: "prefer_not_say", label: "I'd prefer not to say.", tags: [T.uncertainty_present] },
     ],
   },
@@ -268,6 +278,7 @@ export const QUESTIONS: Question[] = [
     type: "single_select",
     required: true,
     question: "Which living situation feels most like home for a long-term partnership?",
+    helper: "Choose the setup you could live in for years, not the one that is convenient this year.",
     options: [
       { id: "family_home", label: "Living with parents or in a joint family, at least for a period.", tags: [T.living_with_family, T.family_central] },
       { id: "nearby", label: "Our own home,but close enough to parents' that family is part of ordinary life.", tags: [T.living_nearby_family, T.family_balanced] },
@@ -283,6 +294,7 @@ export const QUESTIONS: Question[] = [
     type: "scenario",
     required: true,
     question: "Parents (could be eithers') want significant say in how you live (home, festivals, future children). What feels fair?",
+    helper: "Assume both families, not only the one that is easier to picture.",
     options: [
       { id: "include", label: "Including them is part of marrying into a family. I would try to accommodate.", tags: [T.inlaws_close, T.family_central, T.parents_involved] },
       { id: "respect_bound", label: "Consult them with respect and warmth, with a clear line: they advise, but we both ultimately decide.", tags: [T.inlaws_bounded, T.couple_autonomy_high] },
@@ -314,6 +326,7 @@ export const QUESTIONS: Question[] = [
     type: "single_select",
     required: true,
     question: "How would you like to handle money in a marriage?",
+    helper: "This is about who can see and use the money, not how much you want to save.",
     options: [
       { id: "joint", label: "Mostly together: shared accounts and shared visibility feel comfortable to me.", tags: [T.finances_joint] },
       { id: "hybrid", label: "A mix: shared expenses and goals, plus some money that is just mine.", tags: [T.finances_hybrid, T.financial_independence] },
@@ -328,6 +341,7 @@ export const QUESTIONS: Question[] = [
     type: "single_select",
     required: true,
     question: "What do you most want money to do for your life?",
+    helper: "Pick the purpose that would win if the others had to wait.",
     options: [
       { id: "cushion", label: "Build a cushion so we are not exposed.", tags: [T.financial_security_high, T.saving_oriented, T.stability_high] },
       { id: "experiences", label: "Pay for experiences — travel, food, time that feels lived.", tags: [T.spending_comfortable, T.lifestyle_active] },
@@ -344,6 +358,7 @@ export const QUESTIONS: Question[] = [
     type: "single_select",
     required: true,
     question: "Which description is closer to how you relate to money?",
+    helper: "Answer from how you actually spend and save, not the habit you are trying to build.",
     options: [
       { id: "save", label: "I prefer saving first. Spending should be deliberate.", tags: [T.saving_oriented, T.financial_security_high, T.risk_cautious] },
       { id: "balanced", label: "I want a cushion, and I also want to enjoy what we earn.", tags: [T.financial_security_high, T.spending_comfortable] },
@@ -358,6 +373,7 @@ export const QUESTIONS: Question[] = [
     type: "scenario",
     required: true,
     question: "Imagine your partner receives an excellent career opportunity in another city. Which statement comes closest to your perspective?",
+    helper: "There is no neutral city in this question. Someone’s work, or both, has to bend.",
     options: [
       { id: "prioritize", label: "We should prioritize the career opportunity.", tags: [T.career_high, T.relocation_flexible, T.dual_career_supportive] },
       { id: "both", label: "We should find a solution that works equally for both careers.", tags: [T.dual_career_supportive, T.decisions_shared, T.career_balanced] },
@@ -374,6 +390,7 @@ export const QUESTIONS: Question[] = [
     type: "scenario",
     required: true,
     question: "If one partner earns significantly more, what feels like a fair approach to household contribution?",
+    helper: "Fair here means what you could live with for years, not what sounds even on paper.",
     options: [
       { id: "equal_cash", label: "Equal cash contribution. Earnings should not create a hierarchy.", tags: [T.financial_independence] },
       { id: "proportional", label: "Proportional to income. The higher earner contributes more to shared costs.", tags: [T.finances_joint, T.decisions_shared] },
@@ -390,6 +407,7 @@ export const QUESTIONS: Question[] = [
     type: "tradeoff",
     required: true,
     question: "A chance to take a financial risk (a startup, a career break, an investment) appears. You would tend to…",
+    helper: "Choose the instinct that shows up before the spreadsheet is finished.",
     options: [
       { id: "take", label: "Take well-considered risks if the upside matters.", tags: [T.risk_tolerant, T.growth_high] },
       { id: "protect", label: "Protect stability first. I need a strong safety net before any leap.", tags: [T.risk_cautious, T.stability_high, T.financial_security_high] },
@@ -404,6 +422,7 @@ export const QUESTIONS: Question[] = [
     type: "single_select",
     required: true,
     question: "How do you see two careers inside one relationship?",
+    helper: "Think of a year when both jobs are busy, not a year when one is already lighter.",
     options: [
       { id: "both_full", label: "Both careers should be taken seriously. Neither should quietly become “the flexible one.”", tags: [T.dual_career_supportive, T.career_high] },
       { id: "seasons", label: "Careers can take turns — seasons where one person’s work leads.", tags: [T.dual_career_supportive, T.career_balanced, T.flexibility_high] },
@@ -419,6 +438,7 @@ export const QUESTIONS: Question[] = [
     type: "single_select",
     required: true,
     question: "In the social life you want, where do alcohol and smoking sit for you?",
+    helper: "Answer for ordinary evenings with other people.",
     options: [
       { id: "none", label: "Neither is part of how I like to socialize.", tags: [T.substances_absent] },
       { id: "occasional", label: "Occasionally, and not the point of the evening.", tags: [T.flexibility_high] },
@@ -434,6 +454,7 @@ export const QUESTIONS: Question[] = [
     type: "single_select",
     required: true,
     question: "What kind of lifestyle feels most like you?",
+    helper: "Choose the pace you return to when nobody is planning a special week.",
     options: [
       { id: "quiet", label: "A quiet, home-based rhythm.", tags: [T.lifestyle_quiet] },
       { id: "mixed", label: "A mix of home and going out.", tags: [T.flexibility_high, T.companionship_high] },
@@ -449,6 +470,7 @@ export const QUESTIONS: Question[] = [
     type: "single_select",
     required: true,
     question: "How flexible do you want to be if a partner’s rhythm differs from yours?",
+    helper: "Rhythm means the day-to-day lifestyle on the normal, typical days.",
     options: [
       { id: "similar", label: "I hope we are fairly similar. A large gap would wear on me.", tags: [T.flexibility_low] },
       { id: "bend", label: "I can bend a lot if the relationship feels right.", tags: [T.flexibility_high] },
@@ -465,11 +487,12 @@ export const QUESTIONS: Question[] = [
     type: "single_select",
     required: true,
     question: "How was your childhood, as you remember it?",
+    helper: "Use the memory you actually carry, not the version that is easiest to tell.",
     options: [
-      { id: "warm", label: "Mostly warm and steady.", tags: [] },
-      { id: "mixed", label: "Mixed — some closeness, some strain.", tags: [] },
-      { id: "difficult", label: "Difficult in ways I still notice.", tags: [] },
-      { id: "complicated", label: "Hard to put into one of these.", tags: [T.uncertainty_present] },
+      { id: "warm", label: "Mostly warm and steady.", tags: [T.childhood_steady] },
+      { id: "mixed", label: "Mixed — some closeness, some strain.", tags: [T.childhood_mixed] },
+      { id: "difficult", label: "Difficult in ways I still notice.", tags: [T.childhood_difficult] },
+      { id: "complicated", label: "Hard to put into one of these.", tags: [T.childhood_complex] },
     ],
   },
   {
@@ -480,12 +503,13 @@ export const QUESTIONS: Question[] = [
     type: "single_select",
     required: true,
     question: "What have you done with that experience?",
+    helper: "There is no finished state required. Say where you are with it now.",
     visibleWhen: { questionId: "childhood", optionIds: ["difficult","complicated","mixed"] },
     options: [
-      { id: "understand", label: "I have spent time understanding it, in my own way.", tags: [T.personal_growth_high] },
-      { id: "leave", label: "I mostly leave it in the past and do not revisit it.", tags: [] },
-      { id: "middle", label: "I am still in the middle of making sense of it.", tags: [T.uncertainty_present, T.personal_growth_high] },
-      { id: "history", label: "It is part of my history, and I do not feel it needs a project.", tags: [] },
+      { id: "understand", label: "I have spent time understanding it, in my own way.", tags: [T.childhood_examined, T.personal_growth_high] },
+      { id: "leave", label: "I mostly leave it in the past and do not revisit it.", tags: [T.childhood_set_aside] },
+      { id: "middle", label: "I am still in the middle of making sense of it.", tags: [T.childhood_in_process, T.personal_growth_high] },
+      { id: "history", label: "It is part of my history, and I do not feel it needs a project.", tags: [T.childhood_settled] },
     ],
   },
   {
@@ -496,6 +520,7 @@ export const QUESTIONS: Question[] = [
     type: "single_select",
     required: true,
     question: "If you are in conflict and a decision still has to be made, what feels legitimate?",
+    helper: "The decision cannot wait for the feeling to disappear. Choose how it should still get made.",
     options: [
       { id: "wait", label: "Wait until we are no longer in the heat of it, even if that slows things down.", tags: [T.conflict_space, T.decisions_shared] },
       { id: "push", label: "Stay in the conversation until there is a resolution. Unfinished conflict is worse.", tags: [T.conflict_direct, T.decisions_shared] },
@@ -510,6 +535,7 @@ export const QUESTIONS: Question[] = [
     type: "scenario",
     required: true,
     question: "You discover after some time together that you differ on something important, but not a stated deal-breaker. What is closest to your stance?",
+    helper: "This is a difference you can live beside, not one you already named as impossible.",
     options: [
       { id: "talk", label: "Name it early and see if we can live with a real compromise.", tags: [T.communication_open, T.conflict_direct, T.flexibility_high] },
       { id: "adapt", label: "I can adapt quite a lot if I feel respected.", tags: [T.flexibility_high] },
@@ -526,6 +552,7 @@ export const QUESTIONS: Question[] = [
     maxSelect: 3,
     required: true,
     question: "Which three things would be hardest for you to compromise on in a marriage? Choose up to three.",
+    helper: "Hardest means a lasting mismatch here would make the relationship very difficult to choose.",
     options: [
       { id: "dishonesty", label: "Dishonesty or repeated lying.", tags: [T.communication_open, T.emotional_connection_high] },
       { id: "infidelity", label: "Infidelity or breach of trust.", tags: [T.emotional_connection_high, T.stability_high] },

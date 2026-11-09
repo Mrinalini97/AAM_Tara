@@ -60,6 +60,13 @@ export default async function AdminUserPage({ params }: { params: Promise<{ user
           {detail.coupleReportGeneratedAt ? (
             <dd className="mt-1 text-xs text-ink-soft">{formatDate(detail.coupleReportGeneratedAt)}</dd>
           ) : null}
+          {detail.invitationId && detail.partnerName ? (
+            <dd className="mt-2">
+              <Link href={`/admin/couples/${detail.invitationId}`} className="text-sm text-sage">
+                Open couple report
+              </Link>
+            </dd>
+          ) : null}
         </Card>
         <Card>
           <dt className="text-sm text-ink-soft">Opened consolidated</dt>

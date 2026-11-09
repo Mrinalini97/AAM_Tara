@@ -14,6 +14,7 @@ export type AdminUserRow = {
   completedAt: string | null;
   answerCount: number;
   questionTotal: number;
+  invitationId: string | null;
   invitationStatus: string | null;
   partnerName: string | null;
   coupleReportGenerated: boolean;
@@ -24,6 +25,7 @@ export type AdminUserRow = {
 
 export type AdminCoupleRow = {
   invitationId: string;
+  comparisonId: string | null;
   inviterId: string;
   inviteeId: string;
   inviterName: string | null;
@@ -154,6 +156,7 @@ export async function loadAdminDashboard(): Promise<{
       completedAt: assessment?.completed_at ?? null,
       answerCount: answerCounts.get(profile.id) ?? 0,
       questionTotal: QUESTIONS.length,
+      invitationId: invitation?.id ?? null,
       invitationStatus: invitation?.status ?? null,
       partnerName: partnerId ? (nameById.get(partnerId) ?? null) : null,
       coupleReportGenerated: Boolean(comparison),
@@ -171,6 +174,7 @@ export async function loadAdminDashboard(): Promise<{
       const views = comparison ? viewsByComparison.get(comparison.id) : undefined;
       return {
         invitationId: invite.id,
+        comparisonId: comparison?.id ?? null,
         inviterId: invite.inviter_id,
         inviteeId,
         inviterName: nameById.get(invite.inviter_id) ?? null,

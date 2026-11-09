@@ -190,7 +190,7 @@ export default async function LandingPage() {
       </section>
 
       <WordMarquee words={BIODATA} />
-
+{/* 
       <section className="bg-paper">
         <div className="mx-auto grid max-w-6xl gap-10 px-4 py-14 md:grid-cols-12 md:py-20">
           <div className="md:col-span-5">
@@ -214,7 +214,7 @@ export default async function LandingPage() {
             </p>
           </div>
         </div>
-      </section>
+      </section> */}
 
       <section className="bg-ink text-paper">
         <div className="mx-auto max-w-6xl px-4 py-14 md:py-20">
@@ -296,7 +296,7 @@ export default async function LandingPage() {
         </div>
       </section>
 
-      <section className="bg-flare text-ink">
+      {/* <section className="bg-flare text-ink">
         <div className="mx-auto max-w-6xl px-4 py-14 md:py-20">
           <h2 className="max-w-3xl font-serif text-3xl leading-tight md:text-5xl">
             This isn&apos;t about finding “the one.”
@@ -322,9 +322,9 @@ export default async function LandingPage() {
             “What should I understand about us before I decide?”
           </blockquote>
         </div>
-      </section>
+      </section> */}
 
-      <section className="bg-ink text-paper">
+      {/* <section className="bg-ink text-paper">
         <div className="mx-auto max-w-6xl px-4 py-16 md:py-24">
           <h2 className="max-w-3xl font-serif text-3xl leading-tight md:text-5xl">
             Before you decide about them, understand what you&apos;re deciding about.
@@ -336,25 +336,25 @@ export default async function LandingPage() {
             Thoughtful questions. Honest perspectives. Better conversations.
           </p>
         </div>
-      </section>
+      </section> */}
 
-      <section className="bg-paper">
+      <section className="bg-ink text-paper">
         <div className="mx-auto max-w-6xl px-4 py-14 md:py-16">
           <p className="text-xs uppercase tracking-[0.28em] text-flare">Private by design.</p>
-          <p className="mt-3 max-w-xl text-sm leading-relaxed text-ink-soft">
+          <p className="mt-3 max-w-xl text-sm leading-relaxed text-paper-deep">
           Thinking honestly requires feeling safe enough to be honest.
           </p>
      
-          <p className="mt-3 max-w-xl text-sm leading-relaxed text-ink">
+          <p className="mt-3 max-w-xl text-sm leading-relaxed text-gold">
             Your profile is private by default. Only your potential partner can see it, after you both complete the reflection questionnaire.
           </p>
-          <p className="mt-3 max-w-xl text-sm text-ink">You stay in control.</p>
-          <ul className="mt-4 max-w-xl space-y-1.5 text-sm leading-relaxed text-ink-soft">
+          <p className="mt-3 max-w-xl text-sm text-gold">You stay in control.</p>
+          <ul className="mt-4 max-w-xl space-y-1.5 text-sm leading-relaxed text-paper-deep">
             {PRIVACY.map((item) => (
               <li key={item}>{item}</li>
             ))}
           </ul>
-          <p className="mt-5 max-w-xl text-sm text-ink-soft">
+          <p className="mt-5 max-w-xl text-sm text-paper-deep">
             No hidden sharing. No permanent profiles. Just your space to reflect.
           </p>
         </div>

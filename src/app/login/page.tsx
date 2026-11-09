@@ -1,6 +1,4 @@
-import { AuthForm } from "@/components/AuthForm";
-import { PublicHeader } from "@/components/PublicHeader";
-import { safeNextPath } from "@/lib/auth/validation";
+import { redirect } from "next/navigation";
 
 export default async function LoginPage({
   searchParams,
@@ -8,18 +6,8 @@ export default async function LoginPage({
   searchParams: Promise<{ next?: string; error?: string }>;
 }) {
   const { next, error } = await searchParams;
-  return (
-    <div className="min-h-screen bg-ink text-paper">
-      <PublicHeader tone="dark" />
-      <div className="mx-auto max-w-md px-4 py-16">
-        <p className="text-xs uppercase tracking-[0.28em] text-flare">Welcome back</p>
-        <h1 className="mt-4 font-serif text-4xl">Sign in to continue.</h1>
-        <p className="mt-3 text-sm text-paper/60">Pick up your reflection where you left it.</p>
-        {error ? <p className="mt-4 text-sm text-gold">{error}</p> : null}
-        <div className="mt-10">
-          <AuthForm mode="login" nextPath={safeNextPath(next, "/home")} />
-        </div>
-      </div>
-    </div>
-  );
+  const params = new URLSearchParams({ mode: "login" });
+  if (next) params.set("next", next);
+  if (error) params.set("error", error);
+  redirect(`/signup?${params.toString()}`);
 }

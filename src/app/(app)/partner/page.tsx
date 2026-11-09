@@ -49,8 +49,10 @@ export default async function PartnerPage() {
       <p className="text-xs uppercase tracking-[0.25em] text-sage">Partner</p>
       <h1 className="mt-3 font-serif text-4xl">Ready to understand each other?</h1>
       <p className="mt-4 max-w-xl text-lg leading-relaxed text-ink-soft">
-        Invite someone you’re considering as a life partner. They’ll complete their own reflection
-        independently. They will not see your answers before they finish.
+        Invite someone you’re considering as a life partner. If they already finished their own
+        reflection, they sign in with that account and open this link. Their existing answers are
+        linked. They do not fill the questionnaire again, and they will not see yours until both are
+        linked.
       </p>
 
       <InvitePanel existingLink={isInviter ? link : null} status={invitation?.status ?? null} />

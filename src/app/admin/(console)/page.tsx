@@ -50,7 +50,7 @@ export default async function AdminDashboardPage() {
         </Card>
       ) : null}
 
-      <section className="space-y-4">
+      <section id="couples" className="space-y-4">
         <h2 className="font-serif text-2xl">Couples</h2>
         <p className="text-sm text-ink-soft">
           Whether the shared report exists, and whether each partner has opened Understand us.
@@ -89,7 +89,12 @@ export default async function AdminDashboardPage() {
                   </td>
                   <td className="py-3 pr-4">{couple.invitationStatus}</td>
                   <td className="py-3 pr-4">
-                    {couple.reportGenerated ? "Generated" : "Not generated"}
+                    <Link
+                      href={`/admin/couples/${couple.invitationId}`}
+                      className="text-sage underline-offset-2 hover:underline"
+                    >
+                      {couple.reportGenerated ? "View report" : "Generate report"}
+                    </Link>
                     {couple.reportGeneratedAt ? (
                       <span className="block text-xs text-ink-soft">{formatDate(couple.reportGeneratedAt)}</span>
                     ) : null}

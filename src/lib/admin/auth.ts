@@ -5,15 +5,30 @@ const COOKIE = "tara_admin";
 const TTL_SECONDS = 60 * 60 * 24 * 7;
 
 export function getAdminCredentials() {
-  return {
-    username: process.env.ADMIN_USERNAME || "admin_manasa",
-    password: process.env.ADMIN_PASSWORD || "admin123",
-  };
+  const username = process.env.ADMIN_USERNAME;
+  const password = process.env.ADMIN_PASSWORD;
+  if (!username || !password) {
+    if (process.env.VERCEL || process.env.NODE_ENV === "production") {
+      return { username: "", password: "" };
+    }
+    return { username: "admin_manasa", password: "admin123" };
+  }
+  return { username, password };
+}
+
+export function isAdminConfigured() {
+  const { username, password } = getAdminCredentials();
+  return Boolean(username && password);
 }
 
 function sessionSecret() {
   const { username, password } = getAdminCredentials();
-  return process.env.ADMIN_SESSION_SECRET || `${username}:${password}:tara-admin`;
+  const secret = process.env.ADMIN_SESSION_SECRET;
+  if (secret) return secret;
+  if (process.env.VERCEL || process.env.NODE_ENV === "production") {
+    return "unconfigured-admin-session";
+  }
+  return `${username}:${password}:tara-admin`;
 }
 
 function digestEqual(a: string, b: string) {

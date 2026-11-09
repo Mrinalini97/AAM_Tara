@@ -94,6 +94,15 @@ export interface DimensionSummary {
   summary: string;
 }
 
+/** One reflection point: a short observation, then a single question. */
+export interface ReflectionPoint {
+  observation: string;
+  question: string;
+  /** Uncertain answers this point covers. Omitted answers are filled from the rules draft. */
+  questionIds?: string[];
+  kind?: "uncertainty" | "conflict" | "gap";
+}
+
 export interface SelfReport {
   orientation: string;
   themes: ThemeCard[];
@@ -103,6 +112,7 @@ export interface SelfReport {
   nonNegotiables: NonNegotiableItem[];
   selfQuestions: string[];
   dimensionSummaries?: DimensionSummary[];
+  reflectionPoints?: ReflectionPoint[];
   generatedBy?: "rules" | "hybrid" | "slm";
 }
 

@@ -30,11 +30,7 @@ export function PublicHeader({
             <Link href="/home" className={dark ? "hover:text-paper" : "hover:text-ink"}>
               Continue
             </Link>
-          ) : (
-            <Link href="/login" className={dark ? "hover:text-paper" : "hover:text-ink"}>
-              Sign in
-            </Link>
-          )}
+          ) : null}
           <Link
             href={startHref}
             className={

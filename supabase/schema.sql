@@ -3,9 +3,30 @@ create extension if not exists "pgcrypto";
 create table if not exists public.profiles (
   id uuid primary key references auth.users (id) on delete cascade,
   display_name text,
+  username text,
+  age smallint,
   created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now()
+  updated_at timestamptz not null default now(),
+  constraint profiles_age_range check (age is null or (age >= 18 and age <= 120)),
+  constraint profiles_username_format check (username is null or username ~ '^[a-z0-9_]{3,24}$')
 );
+
+alter table public.profiles add column if not exists username text;
+alter table public.profiles add column if not exists age smallint;
+
+do $$
+begin
+  if not exists (select 1 from pg_constraint where conname = 'profiles_age_range') then
+    alter table public.profiles add constraint profiles_age_range check (age is null or (age >= 18 and age <= 120));
+  end if;
+  if not exists (select 1 from pg_constraint where conname = 'profiles_username_format') then
+    alter table public.profiles add constraint profiles_username_format check (username is null or username ~ '^[a-z0-9_]{3,24}$');
+  end if;
+end $$;
+
+create unique index if not exists profiles_username_taken
+  on public.profiles (username)
+  where username is not null;
 
 create table if not exists public.match_preferences (
   id uuid primary key default gen_random_uuid(),
@@ -160,8 +181,13 @@ for each row execute function public.touch_updated_at();
 create or replace function public.handle_new_user()
 returns trigger language plpgsql security definer set search_path = public as $$
 begin
-  insert into public.profiles (id, display_name)
-  values (new.id, coalesce(new.raw_user_meta_data ->> 'display_name', split_part(new.email, '@', 1)));
+  insert into public.profiles (id, display_name, username, age)
+  values (
+    new.id,
+    coalesce(new.raw_user_meta_data ->> 'display_name', split_part(new.email, '@', 1)),
+    nullif(lower(new.raw_user_meta_data ->> 'username'), ''),
+    nullif(new.raw_user_meta_data ->> 'age', '')::smallint
+  );
   return new;
 end;
 $$;
@@ -191,6 +217,14 @@ begin
   if inv.expires_at < now() then raise exception 'Invitation expired'; end if;
   if inv.inviter_id = auth.uid() then raise exception 'You cannot accept your own invitation'; end if;
   if inv.invitee_id is not null and inv.invitee_id <> auth.uid() then raise exception 'Invitation already accepted'; end if;
+  if exists (
+    select 1 from public.partner_invitations other
+    where other.id <> inv.id
+      and other.status in ('accepted', 'ready')
+      and (other.inviter_id = auth.uid() or other.invitee_id = auth.uid())
+  ) then
+    raise exception 'You are already linked with a partner';
+  end if;
   update public.partner_invitations
     set invitee_id = auth.uid(),
         status = case when status = 'pending' then 'accepted' else status end,

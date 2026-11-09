@@ -1,7 +1,7 @@
 import type { Question } from "@/lib/types";
 import { TAGS as T } from "@/lib/engine/tags";
 
-export const QUESTIONS: Question[] = [
+export const QUESTIONS = [
   {
     id: "values_rank",
     dimension: "core_values",
@@ -625,6 +625,6 @@ export const QUESTIONS: Question[] = [
     question: "What would you most want a prospective partner to understand about you — something a form cannot fully capture?",
     helper: "Optional. This stays in your own profile. It is not shown as raw text to a partner in this MVP.",
   },
-];
+] as Question[];
 
 export const QUESTION_BY_ID = Object.fromEntries(QUESTIONS.map((q) => [q.id, q])) as Record<string, Question>;

@@ -5,6 +5,8 @@ import { adminLogout } from "../actions";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
+export const dynamic = "force-dynamic";
+
 export default async function AdminConsoleLayout({ children }: { children: React.ReactNode }) {
   if (!(await isAdminAuthenticated())) redirect("/admin/login");
 
@@ -17,6 +19,9 @@ export default async function AdminConsoleLayout({ children }: { children: React
             <nav className="flex items-center gap-4 text-sm text-ink-soft">
               <Link href="/admin" className="hover:text-ink">
                 Users
+              </Link>
+              <Link href="/admin#couples" className="hover:text-ink">
+                Couples
               </Link>
             </nav>
           </div>

@@ -79,4 +79,12 @@ export const TAGS = {
   history_none: "history_none",
   history_serious: "history_serious",
   history_casual: "history_casual",
+  childhood_steady: "childhood_steady",
+  childhood_mixed: "childhood_mixed",
+  childhood_difficult: "childhood_difficult",
+  childhood_complex: "childhood_complex",
+  childhood_examined: "childhood_examined",
+  childhood_set_aside: "childhood_set_aside",
+  childhood_in_process: "childhood_in_process",
+  childhood_settled: "childhood_settled",
 } as const;

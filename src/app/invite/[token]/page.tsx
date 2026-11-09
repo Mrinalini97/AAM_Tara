@@ -27,6 +27,16 @@ export default async function InvitePage({
     data: { user },
   } = await supabase.auth.getUser();
 
+  let alreadyComplete = false;
+  if (user) {
+    const { data: assessment } = await supabase
+      .from("assessments")
+      .select("status")
+      .eq("user_id", user.id)
+      .maybeSingle();
+    alreadyComplete = assessment?.status === "completed";
+  }
+
   if (!row) {
     return (
       <div className="min-h-screen px-4 py-16 text-center">
@@ -56,16 +66,21 @@ export default async function InvitePage({
         <Logo />
         <p className="mt-10 text-xs uppercase tracking-[0.25em] text-sage">An invitation to reflect</p>
         <h1 className="mt-4 font-serif text-4xl leading-tight">
-          {row.inviter_display_name
-            ? `${row.inviter_display_name} invited you to complete your own reflection`
-            : "You’ve been invited to complete your own reflection"}
+          {alreadyComplete
+            ? row.inviter_display_name
+              ? `Link your finished reflection with ${row.inviter_display_name}`
+              : "Link the reflection you already finished"
+            : row.inviter_display_name
+              ? `${row.inviter_display_name} invited you to complete your own reflection`
+              : "You’ve been invited to complete your own reflection"}
         </h1>
         <p className="mt-5 text-lg leading-relaxed text-ink-soft">
-          You will not see their answers before you finish. The aim is an independent picture of what
-          matters to you — then a shared conversation, not a score.
+          {alreadyComplete
+            ? "Your existing answers stay as they are. You will not see their answers until both reflections are linked. Nothing is filled in again."
+            : "You will not see their answers before you finish. The aim is an independent picture of what matters to you — then a shared conversation, not a score."}
         </p>
         {user ? (
-          <AcceptInvite token={token} />
+          <AcceptInvite token={token} alreadyComplete={alreadyComplete} />
         ) : (
           <div className="mt-8 flex flex-wrap justify-center gap-3">
             <Link
